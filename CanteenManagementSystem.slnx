@@ -1,0 +1,25 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/CanteenManagementSystem.Domain/CanteenManagementSystem.Domain.csproj" />
+        <Project Path="src/CanteenManagementSystem.Application/CanteenManagementSystem.Application.csproj" />
+        <Project Path="src/CanteenManagementSystem.EntityFrameworkCore/CanteenManagementSystem.EntityFrameworkCore.csproj" />
+        <Project Path="src/CanteenManagementSystem.Domain.Shared/CanteenManagementSystem.Domain.Shared.csproj" />
+        <Project Path="src/CanteenManagementSystem.Application.Contracts/CanteenManagementSystem.Application.Contracts.csproj" />
+        <Project Path="src/CanteenManagementSystem.HttpApi/CanteenManagementSystem.HttpApi.csproj" />
+        <Project Path="src/CanteenManagementSystem.HttpApi.Client/CanteenManagementSystem.HttpApi.Client.csproj" />
+        <Project Path="src/CanteenManagementSystem.HttpApi.Host/CanteenManagementSystem.HttpApi.Host.csproj" />
+        <Project Path="src/CanteenManagementSystem.DbMigrator/CanteenManagementSystem.DbMigrator.csproj" />
+        <Project Path="src/CanteenManagementSystem.Blazor/CanteenManagementSystem.Blazor.csproj" />
+        <Project Path="src/CanteenManagementSystem.Blazor.Client/CanteenManagementSystem.Blazor.Client.csproj" />
+    </Folder>
+    <Folder Name="/test/">
+        <Project Path="test/CanteenManagementSystem.Application.Tests/CanteenManagementSystem.Application.Tests.csproj" />
+        <Project Path="test/CanteenManagementSystem.EntityFrameworkCore.Tests/CanteenManagementSystem.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/CanteenManagementSystem.TestBase/CanteenManagementSystem.TestBase.csproj" />
+        <Project Path="test/CanteenManagementSystem.Domain.Tests/CanteenManagementSystem.Domain.Tests.csproj" />
+        <Project Path="test/CanteenManagementSystem.HttpApi.Client.ConsoleTestApp/CanteenManagementSystem.HttpApi.Client.ConsoleTestApp.csproj" />
+    </Folder>
+</Solution>

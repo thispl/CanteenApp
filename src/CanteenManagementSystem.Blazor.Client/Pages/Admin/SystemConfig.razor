@@ -1,0 +1,303 @@
+@page "/admin/system-config"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>System Configuration | CMS Admin</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is12">
+        <Heading Size="HeadingSize.Is3">
+            <i class="fas fa-server me-2"></i>
+            System Configuration
+        </Heading>
+        <Paragraph>Configure server URLs, database connections and service settings.</Paragraph>
+    </Column>
+</Row>
+
+@if (Config == null)
+{
+    <Row>
+        <Column>
+            <Alert Color="Color.Info" Visible><AlertMessage>Loading configuration...</AlertMessage></Alert>
+        </Column>
+    </Row>
+}
+else
+{
+    @if (SaveResult != null)
+    {
+        <Row Class="mb-3">
+            <Column>
+                <Alert Color="@(SaveResult.Success ? Color.Success : Color.Danger)" Visible>
+                    <AlertMessage>@SaveResult.Message</AlertMessage>
+                    @if (SaveResult.RestartRequired)
+                    {
+                        <AlertDescription>
+                            <strong>Restart required.</strong> Changes will take effect after restarting the Windows Service.
+                            <Button Color="Color.Warning" Size="Size.Small" Clicked="RestartServiceAsync" Class="ms-3">
+                                <Icon Name="IconName.Redo" Class="me-1" /> Restart Service Now
+                            </Button>
+                        </AlertDescription>
+                    }
+                </Alert>
+            </Column>
+        </Row>
+    }
+
+    <Row>
+        <!-- URLs -->
+        <Column ColumnSize="ColumnSize.Is6">
+            <Card Class="mb-4">
+                <CardHeader>
+                    <Icon Name="IconName.Link" Class="me-2" /><b>Server URLs</b>
+                </CardHeader>
+                <CardBody>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">API URL</label>
+                        <input class="form-control" type="text" @bind="Config.ApiUrl" placeholder="http://localhost:5002" />
+                        <small class="text-muted">The backend API and auth server URL</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Blazor UI URL</label>
+                        <input class="form-control" type="text" @bind="Config.BlazorUrl" placeholder="http://localhost:5003" />
+                        <small class="text-muted">The frontend web application URL</small>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+
+        <!-- DB Connections -->
+        <Column ColumnSize="ColumnSize.Is6">
+            <Card Class="mb-4">
+                <CardHeader>
+                    <i class="fas fa-database me-2"></i><b>Database Connections</b>
+                </CardHeader>
+                <CardBody>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Main Database</label>
+                        <div class="input-group">
+                            <input class="form-control font-monospace" type="@(ShowMainConn ? "text" : "password")"
+                                   @bind="Config.DefaultConnectionString"
+                                   placeholder="Server=localhost;Database=CanteenDB;..." />
+                            <button class="btn btn-outline-secondary" type="button"
+                                    @onclick="() => ShowMainConn = !ShowMainConn">
+                                <i class="fas @(ShowMainConn ? "fa-eye-slash" : "fa-eye")"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => TestConnectionAsync(Config.DefaultConnectionString, true)">
+                                <i class="fas fa-plug me-1"></i> Test Connection
+                            </button>
+                            @if (MainConnTestResult != null)
+                            {
+                                <span class="ms-2 @(MainConnTestSuccess ? "text-success" : "text-danger")">
+                                    <i class="fas @(MainConnTestSuccess ? "fa-check-circle" : "fa-times-circle") me-1"></i>
+                                    @MainConnTestResult
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-2 mt-3">
+                        <label class="form-label fw-semibold">ZkTeco Database</label>
+                        <div class="input-group">
+                            <input class="form-control font-monospace" type="@(ShowZkConn ? "text" : "password")"
+                                   @bind="Config.ZkTecoConnectionString"
+                                   placeholder="Server=localhost;Database=easywdms;..." />
+                            <button class="btn btn-outline-secondary" type="button"
+                                    @onclick="() => ShowZkConn = !ShowZkConn">
+                                <i class="fas @(ShowZkConn ? "fa-eye-slash" : "fa-eye")"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => TestConnectionAsync(Config.ZkTecoConnectionString, false)">
+                                <i class="fas fa-plug me-1"></i> Test Connection
+                            </button>
+                            @if (ZkConnTestResult != null)
+                            {
+                                <span class="ms-2 @(ZkConnTestSuccess ? "text-success" : "text-danger")">
+                                    <i class="fas @(ZkConnTestSuccess ? "fa-check-circle" : "fa-times-circle") me-1"></i>
+                                    @ZkConnTestResult
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+
+    <!-- Connection String Builder -->
+    <Row Class="mb-4">
+        <Column>
+            <Card>
+                <CardHeader>
+                    <i class="fas fa-tools me-2"></i><b>Connection String Builder</b>
+                    <small class="text-muted ms-2">Fill in the fields and click Build to generate a connection string</small>
+                </CardHeader>
+                <CardBody>
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is3">
+                            <div class="mb-2">
+                                <label class="form-label">Server / IP</label>
+                                <input class="form-control" @bind="Builder.Server" placeholder="localhost or 192.168.1.10" />
+                            </div>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is3">
+                            <div class="mb-2">
+                                <label class="form-label">Database Name</label>
+                                <input class="form-control" @bind="Builder.Database" placeholder="CanteenManagementSystem" />
+                            </div>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is2">
+                            <div class="mb-2">
+                                <label class="form-label">Auth</label>
+                                <select class="form-select" @bind="Builder.UseWindowsAuth">
+                                    <option value="true">Windows Auth</option>
+                                    <option value="false">SQL Login</option>
+                                </select>
+                            </div>
+                        </Column>
+                        @if (Builder.UseWindowsAuth == "false")
+                        {
+                            <Column ColumnSize="ColumnSize.Is2">
+                                <div class="mb-2">
+                                    <label class="form-label">Username</label>
+                                    <input class="form-control" @bind="Builder.Username" placeholder="sa" />
+                                </div>
+                            </Column>
+                            <Column ColumnSize="ColumnSize.Is2">
+                                <div class="mb-2">
+                                    <label class="form-label">Password</label>
+                                    <input class="form-control" type="password" @bind="Builder.Password" />
+                                </div>
+                            </Column>
+                        }
+                    </Row>
+                    <Row>
+                        <Column>
+                            <button class="btn btn-primary btn-sm me-2" @onclick="BuildConnectionString">
+                                <i class="fas fa-hammer me-1"></i> Build
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="() => ApplyToMain = true">
+                                Apply to Main DB
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => ApplyToZk = true">
+                                Apply to ZkTeco DB
+                            </button>
+                        </Column>
+                    </Row>
+                    @if (!string.IsNullOrEmpty(BuiltConnectionString))
+                    {
+                        <div class="mt-2">
+                            <input class="form-control font-monospace text-success" readonly value="@BuiltConnectionString" />
+                        </div>
+                    }
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+
+    <!-- Save -->
+    <Row>
+        <Column>
+            <Button Color="Color.Primary" Clicked="SaveConfigAsync" Loading="IsSaving">
+                <Icon Name="IconName.Save" Class="me-2" />
+                Save All Settings
+            </Button>
+            <Button Color="Color.Secondary" Clicked="LoadConfigAsync" Class="ms-2">
+                <Icon Name="IconName.Undo" Class="me-2" />
+                Reload
+            </Button>
+        </Column>
+    </Row>
+}
+
+@code {
+    [Inject] private ISystemConfigAppService SystemConfigAppService { get; set; } = null!;
+
+    private SystemConfigDto? Config { get; set; }
+    private SystemConfigResultDto? SaveResult { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsRestarting { get; set; }
+
+    private bool ShowMainConn { get; set; }
+    private bool ShowZkConn { get; set; }
+
+    private string? MainConnTestResult { get; set; }
+    private bool MainConnTestSuccess { get; set; }
+    private string? ZkConnTestResult { get; set; }
+    private bool ZkConnTestSuccess { get; set; }
+
+    private string? BuiltConnectionString { get; set; }
+    private bool ApplyToMain { get; set; }
+    private bool ApplyToZk { get; set; }
+
+    private ConnStringBuilder Builder { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConfigAsync();
+    }
+
+    private async Task LoadConfigAsync()
+    {
+        SaveResult = null;
+        Config = await SystemConfigAppService.GetConfigAsync();
+    }
+
+    private async Task SaveConfigAsync()
+    {
+        IsSaving = true;
+        SaveResult = null;
+        try
+        {
+            SaveResult = await SystemConfigAppService.SaveConfigAsync(Config!);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task TestConnectionAsync(string connStr, bool isMain)
+    {
+        if (string.IsNullOrWhiteSpace(connStr)) return;
+        var result = await SystemConfigAppService.TestConnectionAsync(connStr);
+        if (isMain) { MainConnTestResult = result.Message; MainConnTestSuccess = result.Success; }
+        else { ZkConnTestResult = result.Message; ZkConnTestSuccess = result.Success; }
+    }
+
+    private void BuildConnectionString()
+    {
+        if (string.IsNullOrWhiteSpace(Builder.Server) || string.IsNullOrWhiteSpace(Builder.Database)) return;
+
+        BuiltConnectionString = Builder.UseWindowsAuth == "true"
+            ? $"Server={Builder.Server};Database={Builder.Database};Trusted_Connection=True;TrustServerCertificate=true"
+            : $"Server={Builder.Server};Database={Builder.Database};User Id={Builder.Username};Password={Builder.Password};TrustServerCertificate=true";
+
+        if (ApplyToMain && Config != null) { Config.DefaultConnectionString = BuiltConnectionString; ApplyToMain = false; }
+        if (ApplyToZk && Config != null) { Config.ZkTecoConnectionString = BuiltConnectionString; ApplyToZk = false; }
+    }
+
+    private async Task RestartServiceAsync()
+    {
+        IsRestarting = true;
+        try
+        {
+            await Message.Info("Please restart the Windows Service manually:\n\nsc stop CanteenManagementService\nsc start CanteenManagementService\n\nOr use the Services panel (services.msc).");
+        }
+        finally { IsRestarting = false; }
+    }
+
+    private class ConnStringBuilder
+    {
+        public string Server { get; set; } = "localhost";
+        public string Database { get; set; } = string.Empty;
+        public string UseWindowsAuth { get; set; } = "true";
+        public string Username { get; set; } = "sa";
+        public string Password { get; set; } = string.Empty;
+    }
+}

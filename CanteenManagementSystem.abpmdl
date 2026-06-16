@@ -1,0 +1,117 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "5.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.Account": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "10.4.1",
+      "isInstalled": true,
+      "creationTime": "06/11/2026 12:40:10 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "CanteenManagementSystem.Application": {
+      "path": "src/CanteenManagementSystem.Application/CanteenManagementSystem.Application.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.Application.Tests": {
+      "path": "test/CanteenManagementSystem.Application.Tests/CanteenManagementSystem.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "CanteenManagementSystem.Domain.Shared": {
+      "path": "src/CanteenManagementSystem.Domain.Shared/CanteenManagementSystem.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.Application.Contracts": {
+      "path": "src/CanteenManagementSystem.Application.Contracts/CanteenManagementSystem.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.HttpApi": {
+      "path": "src/CanteenManagementSystem.HttpApi/CanteenManagementSystem.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.HttpApi.Client": {
+      "path": "src/CanteenManagementSystem.HttpApi.Client/CanteenManagementSystem.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.EntityFrameworkCore.Tests": {
+      "path": "test/CanteenManagementSystem.EntityFrameworkCore.Tests/CanteenManagementSystem.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "CanteenManagementSystem.EntityFrameworkCore": {
+      "path": "src/CanteenManagementSystem.EntityFrameworkCore/CanteenManagementSystem.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.TestBase": {
+      "path": "test/CanteenManagementSystem.TestBase/CanteenManagementSystem.TestBase.abppkg",
+      "folder": "test"
+    },
+    "CanteenManagementSystem.Domain.Tests": {
+      "path": "test/CanteenManagementSystem.Domain.Tests/CanteenManagementSystem.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "CanteenManagementSystem.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/CanteenManagementSystem.HttpApi.Client.ConsoleTestApp/CanteenManagementSystem.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "CanteenManagementSystem.DbMigrator": {
+      "path": "src/CanteenManagementSystem.DbMigrator/CanteenManagementSystem.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.HttpApi.Host": {
+      "path": "src/CanteenManagementSystem.HttpApi.Host/CanteenManagementSystem.HttpApi.Host.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.Blazor": {
+      "path": "src/CanteenManagementSystem.Blazor/CanteenManagementSystem.Blazor.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.Blazor.Client": {
+      "path": "src/CanteenManagementSystem.Blazor.Client/CanteenManagementSystem.Blazor.Client.abppkg",
+      "folder": "src"
+    },
+    "CanteenManagementSystem.Domain": {
+      "path": "src/CanteenManagementSystem.Domain/CanteenManagementSystem.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

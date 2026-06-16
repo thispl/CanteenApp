@@ -1,0 +1,280 @@
+@page "/admin/branding"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using System.IO
+@using Microsoft.JSInterop
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>Branding Settings | CMS Admin</PageTitle>
+
+<style>
+    .logo-preview-box {
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        background: #f8f9fa;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .logo-preview-box:hover { border-color: #007bff; }
+    .logo-preview-box img { max-width: 180px; max-height: 80px; object-fit: contain; }
+    .upload-hint { color: #6c757d; font-size: 0.85rem; margin-top: 8px; }
+    #logoFileInput { display: none; }
+</style>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is12">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.PaintBrush" Class="me-2" />
+            Branding Settings
+        </Heading>
+        <Paragraph>Customize the application name, logo and colors.</Paragraph>
+    </Column>
+</Row>
+
+@if (Settings == null)
+{
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <Alert Color="Color.Info" Visible>
+                <AlertMessage>Loading...</AlertMessage>
+            </Alert>
+        </Column>
+    </Row>
+}
+else
+{
+    <Row>
+        <!-- Left: Form -->
+        <Column ColumnSize="ColumnSize.Is8">
+            <Card>
+                <CardHeader><b>Edit Branding</b></CardHeader>
+                <CardBody>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">App Name</label>
+                        <input class="form-control" type="text" @bind="Settings.AppName" placeholder="CMS" />
+                        <small class="text-muted">Displayed in the browser tab and header</small>
+                    </div>
+
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Primary Color</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" @bind="Settings.PrimaryColor" style="max-width:50px;" />
+                                    <input type="text" class="form-control" @bind="Settings.PrimaryColor" />
+                                </div>
+                            </div>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Secondary Color</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" @bind="Settings.SecondaryColor" style="max-width:50px;" />
+                                    <input type="text" class="form-control" @bind="Settings.SecondaryColor" />
+                                </div>
+                            </div>
+                        </Column>
+                    </Row>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Favicon URL</label>
+                        <input class="form-control" type="text" @bind="Settings.FaviconUrl" placeholder="/favicon.ico" />
+                    </div>
+
+                    <Divider />
+
+                    <Button Color="Color.Primary" Clicked="SaveSettingsAsync" Loading="IsSaving">
+                        <Icon Name="IconName.Save" Class="me-2" />
+                        Save Settings
+                    </Button>
+                    <Button Color="Color.Secondary" Clicked="ResetToDefaultsAsync" Class="ms-2">
+                        <Icon Name="IconName.Undo" Class="me-2" />
+                        Reset Defaults
+                    </Button>
+                </CardBody>
+            </Card>
+        </Column>
+
+        <!-- Right: Logo Upload + Preview -->
+        <Column ColumnSize="ColumnSize.Is4">
+            <Card>
+                <CardHeader><b>Logo</b></CardHeader>
+                <CardBody>
+                    <!-- Hidden file input -->
+                    <input type="file" id="logoFileInput" accept=".png,.jpg,.jpeg,.svg,.webp"
+                           @onchange="OnLogoFileSelected" />
+
+                    <!-- Clickable preview area -->
+                    <div class="logo-preview-box" @onclick="TriggerFileInput">
+                        @if (!string.IsNullOrEmpty(LogoPreviewUrl))
+                        {
+                            <img src="@LogoPreviewUrl" alt="Logo Preview" />
+                            <div class="upload-hint">Click to change</div>
+                        }
+                        else
+                        {
+                            <div>
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted"></i>
+                                <div class="upload-hint mt-2">Click to upload logo<br/>PNG, JPG, SVG — max 2MB</div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (IsUploading)
+                    {
+                        <div class="text-center mt-2">
+                            <span class="spinner-border spinner-border-sm me-1"></span> Uploading...
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(UploadMessage))
+                    {
+                        <Alert Color="@(UploadSuccess ? Color.Success : Color.Danger)" Visible Class="mt-2">
+                            <AlertMessage>@UploadMessage</AlertMessage>
+                        </Alert>
+                    }
+                </CardBody>
+            </Card>
+
+            <!-- Live preview -->
+            <Card Class="mt-3">
+                <CardHeader><b>Preview</b></CardHeader>
+                <CardBody>
+                    <div style="padding:16px; background:linear-gradient(135deg, @Settings.PrimaryColor 0%, @Settings.SecondaryColor 100%); border-radius:8px; text-align:center;">
+                        @if (!string.IsNullOrEmpty(LogoPreviewUrl))
+                        {
+                            <img src="@LogoPreviewUrl" alt="Logo" style="max-height:48px; max-width:140px; object-fit:contain; margin-bottom:8px; display:block; margin-left:auto; margin-right:auto;" />
+                        }
+                        <h5 style="color:white; margin:0;">@Settings.AppName</h5>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+}
+
+@code {
+    [Inject] private IBrandingSettingsAppService BrandingSettingsAppService { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    private BrandingSettingsDto? Settings { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsUploading { get; set; }
+    private string? UploadMessage { get; set; }
+    private bool UploadSuccess { get; set; }
+    private string? LogoPreviewUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettingsAsync();
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        try
+        {
+            Settings = await BrandingSettingsAppService.GetSettingsAsync();
+            LogoPreviewUrl = Settings.LogoUrl;
+
+            // Apply saved logo to sidebar on page load
+            if (!string.IsNullOrEmpty(Settings.LogoUrl))
+            {
+                await JS.InvokeVoidAsync("eval",
+                    $"document.documentElement.style.setProperty('--lpx-logo', 'url(\"{Settings.LogoUrl}\")');" +
+                    $"document.documentElement.style.setProperty('--lpx-logo-icon', 'url(\"{Settings.LogoUrl}\")');"
+                );
+            }
+        }
+        catch
+        {
+            Settings = new BrandingSettingsDto();
+        }
+    }
+
+    private async Task TriggerFileInput()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('logoFileInput').click()");
+    }
+
+    private async Task OnLogoFileSelected(ChangeEventArgs e)
+    {
+        UploadMessage = null;
+        IsUploading = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await JS.InvokeAsync<string>("readFileAsBase64", "logoFileInput");
+            if (string.IsNullOrEmpty(result)) return;
+
+            // result is "data:image/png;base64,..." 
+            LogoPreviewUrl = result;
+            Settings!.LogoUrl = result;
+            UploadSuccess = true;
+            UploadMessage = "Logo updated! Click Save Settings to apply.";
+
+            // Apply to sidebar immediately
+            await JS.InvokeVoidAsync("eval",
+                $"document.documentElement.style.setProperty('--lpx-logo', 'url(\"{result}\")');" +
+                $"document.documentElement.style.setProperty('--lpx-logo-icon', 'url(\"{result}\")');"
+            );
+        }
+        catch (Exception ex)
+        {
+            UploadSuccess = false;
+            UploadMessage = ex.Message;
+        }
+        finally
+        {
+            IsUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            await BrandingSettingsAppService.UpdateSettingsAsync(Settings!);
+            await Message.Success("Branding settings saved!");
+        }
+        catch (Exception ex)
+        {
+            await Message.Error(ex.Message);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task ResetToDefaultsAsync()
+    {
+        var confirmed = await Message.Confirm("Reset all branding to defaults?");
+        if (!confirmed) return;
+
+        try
+        {
+            await BrandingSettingsAppService.ResetToDefaultsAsync();
+            await LoadSettingsAsync();
+            await JS.InvokeVoidAsync("eval",
+                "document.documentElement.style.removeProperty('--lpx-logo');" +
+                "document.documentElement.style.removeProperty('--lpx-logo-icon');"
+            );
+            await Message.Success("Branding reset to defaults!");
+        }
+        catch (Exception ex)
+        {
+            await Message.Error(ex.Message);
+        }
+    }
+}

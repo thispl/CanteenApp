@@ -1,0 +1,8 @@
+﻿using Volo.Abp;
+
+namespace CanteenManagementSystem.EntityFrameworkCore;
+
+public abstract class CanteenManagementSystemEntityFrameworkCoreTestBase : CanteenManagementSystemTestBase<CanteenManagementSystemEntityFrameworkCoreTestModule>
+{
+
+}

@@ -1,0 +1,90 @@
+@page "/canteen/checkins"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["LiveCanteenLogs"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is12">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Clock" Class="me-2" />
+            @L["LiveCanteenLogs"]
+        </Heading>
+        <Paragraph>@L["LiveCanteenLogsDescription"]</Paragraph>
+    </Column>
+</Row>
+
+<Row>
+    <Column ColumnSize="ColumnSize.Is12">
+        <Card>
+            <CardHeader>
+                <Row Class="align-items-center">
+                    <Column ColumnSize="ColumnSize.Is6">
+                        <Heading Size="HeadingSize.Is5" Class="mb-0">@L["RecentCheckIns"]</Heading>
+                    </Column>
+                    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+                        <Button Color="Color.Secondary" Clicked="RefreshData" Loading="IsLoading">
+                            <Icon Name="IconName.Sync" />
+                            @L["Refresh"]
+                        </Button>
+                    </Column>
+                </Row>
+            </CardHeader>
+            <CardBody>
+                @if (CheckIns == null || IsLoading)
+                {
+                    <Paragraph>@L["Loading..."]</Paragraph>
+                }
+                else if (CheckIns.Count == 0)
+                {
+                    <Alert Color="Color.Info" Visible>
+                        <AlertMessage>@L["NoCheckInsYet"]</AlertMessage>
+                        <AlertDescription>@L["NoCheckInsDescription"]</AlertDescription>
+                    </Alert>
+                }
+                else
+                {
+                    <Table Striped Hoverable Responsive>
+                        <TableHeader ThemeContrast="ThemeContrast.Dark">
+                            <TableRow>
+                                <TableHeaderCell>@L["CheckInTime"]</TableHeaderCell>
+                                <TableHeaderCell>@L["EmployeeId"]</TableHeaderCell>
+                                <TableHeaderCell>@L["FullName"]</TableHeaderCell>
+                                <TableHeaderCell>@L["Department"]</TableHeaderCell>
+                                <TableHeaderCell>@L["DeviceId"]</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var checkIn in CheckIns)
+                            {
+                                <TableRow>
+                                    <TableRowCell>
+                                        <Badge Color="Color.Success" Pill>@checkIn.CheckInTime.ToString("HH:mm:ss")</Badge>
+                                        <br />
+                                        <small class="text-muted">@checkIn.CheckInTime.ToString("MMM dd, yyyy")</small>
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        <code>@checkIn.EmployeeId</code>
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        <strong>@checkIn.FullName</strong>
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        @(checkIn.Department ?? "-")
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        <Badge Color="Color.Info">@checkIn.DeviceId</Badge>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+            </CardBody>
+        </Card>
+    </Column>
+</Row>

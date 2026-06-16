@@ -1,0 +1,132 @@
+@page "/canteen/employees"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["EmployeeDirectory"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Users" Class="me-2" />
+            @L["EmployeeDirectory"]
+        </Heading>
+        <Paragraph>@L["EmployeeDirectoryDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddEmployee"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       placeholder="@L["SearchByNameOrId"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Employees == null)
+        {
+            <Paragraph>@L["Loading..."]</Paragraph>
+        }
+        else if (Employees.Count == 0)
+        {
+            <Paragraph>@L["NoEmployeesFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["EmployeeId"]</TableHeaderCell>
+                        <TableHeaderCell>@L["FullName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Department"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var employee in Employees)
+                    {
+                        <TableRow>
+                            <TableRowCell>@employee.EmployeeId</TableRowCell>
+                            <TableRowCell>@employee.FullName</TableRowCell>
+                            <TableRowCell>@(employee.Department ?? "-")</TableRowCell>
+                            <TableRowCell>@employee.CreationTime.ToString("g")</TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Employees.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddEmployee"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Validations @ref="CreateValidationsRef" Model="NewEmployee" ValidateOnLoad="false">
+                <Validation Validator="ValidationRule.IsNotEmpty">
+                    <Field>
+                        <FieldLabel>@L["EmployeeId"]</FieldLabel>
+                        <input class="form-control" type="text"
+                               value="@NewEmployee.EmployeeId"
+                               @oninput="@((e) => NewEmployee.EmployeeId = e.Value?.ToString() ?? string.Empty)"
+                               placeholder="@L["EmployeeIdPlaceholder"]" />
+                    </Field>
+                </Validation>
+                <Validation Validator="ValidationRule.IsNotEmpty">
+                    <Field>
+                        <FieldLabel>@L["FullName"]</FieldLabel>
+                        <input class="form-control" type="text"
+                               value="@NewEmployee.FullName"
+                               @oninput="@((e) => NewEmployee.FullName = e.Value?.ToString() ?? string.Empty)"
+                               placeholder="@L["FullNamePlaceholder"]" />
+                    </Field>
+                </Validation>
+                <Field>
+                    <FieldLabel>@L["Department"]</FieldLabel>
+                    <input class="form-control" type="text"
+                           value="@NewEmployee.Department"
+                           @oninput="@((e) => NewEmployee.Department = e.Value?.ToString())"
+                           placeholder="@L["DepartmentPlaceholder"]" />
+                </Field>
+            </Validations>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateEmployeeAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

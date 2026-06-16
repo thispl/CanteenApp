@@ -1,0 +1,9 @@
+﻿using CanteenManagementSystem.EntityFrameworkCore;
+using Xunit;
+
+namespace CanteenManagementSystem.EntityFrameworkCore;
+
+public class CanteenManagementSystemEntityFrameworkCoreCollectionFixtureBase : ICollectionFixture<CanteenManagementSystemEntityFrameworkCoreFixture>
+{
+
+}

@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>CanteenManagementSystem</title>
+    <base href="/" />
+
+    <!--ABP:Styles-->
+    <link href="global.css" rel="stylesheet"/>
+    <!--/ABP:Styles-->
+
+    <link href="CanteenManagementSystem.Blazor.Client.styles.css" rel="stylesheet"/>
+
+    <!-- Hide Blazorise Commercial Banner -->
+    <style>
+        .b-commercial-banner,
+        .blazorise-commercial-banner,
+        [class*="commercial-banner"],
+        [class*="b-commercial"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            position: absolute !important;
+            z-index: -9999 !important;
+        }
+    </style>
+
+    <link href="manifest.json" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+
+    <HeadOutlet @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+</head>
+
+<body class="abp-application-layout">
+
+    <script src="_framework/blazor.web.js"></script>
+
+    <div id="ApplicationContainer">
+        <div class="spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+        </div>
+
+        <Routes @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)"/>
+    </div>
+
+    <!--ABP:Scripts-->
+    <script src="global.js"></script>
+    <!--/ABP:Scripts-->
+
+    <script>
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+    <script src="branding.js"></script>
+</body>
+</html>

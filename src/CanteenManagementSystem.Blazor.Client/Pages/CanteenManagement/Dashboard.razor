@@ -1,0 +1,253 @@
+@page "/canteen/dashboard"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.AspNetCore.Components
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["Dashboard"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is12">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.ChartPie" Class="me-2" />
+            @L["CanteenDashboard"]
+        </Heading>
+        <Paragraph>@L["DashboardDescription"]</Paragraph>
+    </Column>
+</Row>
+
+@if (Stats == null)
+{
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <Alert Color="Color.Info">
+                <AlertMessage>@L["LoadingDashboard..."]</AlertMessage>
+            </Alert>
+        </Column>
+    </Row>
+}
+else
+{
+    <!-- Stats Cards -->
+    <Row Class="mb-4">
+        <Column ColumnSize="ColumnSize.Is3">
+            <Card Background="Background.Primary" TextColor="TextColor.White">
+                <CardBody>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <Icon Name="IconName.Users" IconSize="IconSize.x3" />
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <CardTitle Size="HeadingSize.Is5">@L["TotalEmployees"]</CardTitle>
+                            <CardText Style="font-size: 2rem; font-weight: bold;">@Stats.TotalEmployees</CardText>
+                        </div>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3">
+            <Card Background="Background.Success" TextColor="TextColor.White">
+                <CardBody>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <Icon Name="IconName.CalendarCheck" IconSize="IconSize.x3" />
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <CardTitle Size="HeadingSize.Is5">@L["CheckInsToday"]</CardTitle>
+                            <CardText Style="font-size: 2rem; font-weight: bold;">@Stats.TodayCheckIns</CardText>
+                        </div>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3">
+            <Card Background="Background.Info" TextColor="TextColor.White">
+                <CardBody>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <Icon Name="IconName.UserCheck" IconSize="IconSize.x3" />
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <CardTitle Size="HeadingSize.Is5">@L["UniqueVisitors"]</CardTitle>
+                            <CardText Style="font-size: 2rem; font-weight: bold;">@Stats.TodayUniqueCheckIns</CardText>
+                        </div>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3">
+            <Card Background="Background.Warning" TextColor="TextColor.White">
+                <CardBody>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <Icon Name="IconName.ChartLine" IconSize="IconSize.x3" />
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <CardTitle Size="HeadingSize.Is5">@L["WeekCheckIns"]</CardTitle>
+                            <CardText Style="font-size: 2rem; font-weight: bold;">@Stats.WeekCheckIns</CardText>
+                        </div>
+                    </div>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+
+    <!-- Charts and Tables -->
+    <Row Class="mb-4">
+        <!-- Hourly Distribution Chart -->
+        <Column ColumnSize="ColumnSize.Is8">
+            <Card>
+                <CardHeader>
+                    <Icon Name="IconName.ChartBar" Class="me-2" />
+                    @L["TodayHourlyDistribution"]
+                </CardHeader>
+                <CardBody>
+                    @if (Stats.HourlyDistribution.Any(h => h.Count > 0))
+                    {
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <Table Striped Hoverable Size="TableSize.Small">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHeaderCell>@L["Hour"]</TableHeaderCell>
+                                        <TableHeaderCell>@L["Count"]</TableHeaderCell>
+                                        <TableHeaderCell Style="width: 60%;">@L["Visual"]</TableHeaderCell>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    @foreach (var hour in Stats.HourlyDistribution.Where(h => h.Count > 0))
+                                    {
+                                        <TableRow>
+                                            <TableRowCell>@hour.Hour:00 - @(hour.Hour + 1):00</TableRowCell>
+                                            <TableRowCell>
+                                                <Badge Color="Color.Primary">@hour.Count</Badge>
+                                            </TableRowCell>
+                                            <TableRowCell>
+                                                <Progress Color="Color.Primary" Value="(int)((hour.Count * 100) / (Stats.HourlyDistribution.Max(h => h.Count) == 0 ? 1 : Stats.HourlyDistribution.Max(h => h.Count)))" />
+                                            </TableRowCell>
+                                        </TableRow>
+                                    }
+                                </TableBody>
+                            </Table>
+                        </div>
+                    }
+                    else
+                    {
+                        <Alert Color="Color.Info">@L["NoCheckInsToday"]</Alert>
+                    }
+                </CardBody>
+            </Card>
+        </Column>
+
+        <!-- Top Employees Today -->
+        <Column ColumnSize="ColumnSize.Is4">
+            <Card>
+                <CardHeader>
+                    <Icon Name="IconName.Star" Class="me-2" />
+                    @L["TopEmployeesToday"]
+                </CardHeader>
+                <CardBody>
+                    @if (Stats.TopEmployeesToday.Any())
+                    {
+                        <Table Striped Hoverable>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHeaderCell>@L["Employee"]</TableHeaderCell>
+                                    <TableHeaderCell>@L["CheckIns"]</TableHeaderCell>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                @foreach (var employee in Stats.TopEmployeesToday)
+                                {
+                                    <TableRow>
+                                        <TableRowCell>
+                                            <div>@employee.FullName</div>
+                                            <small class="text-muted">@employee.EmployeeId</small>
+                                        </TableRowCell>
+                                        <TableRowCell>
+                                            <Badge Color="Color.Primary">@employee.CheckInCount</Badge>
+                                        </TableRowCell>
+                                    </TableRow>
+                                }
+                            </TableBody>
+                        </Table>
+                    }
+                    else
+                    {
+                        <Alert Color="Color.Info">@L["NoCheckInsToday"]</Alert>
+                    }
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+
+    <!-- Latest Check-ins -->
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <Card>
+                <CardHeader>
+                    <Icon Name="IconName.Clock" Class="me-2" />
+                    @L["LatestCheckIns"]
+                </CardHeader>
+                <CardBody>
+                    @if (Stats.LatestCheckIns.Any())
+                    {
+                        <Table Striped Hoverable Responsive>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHeaderCell>@L["EmployeeId"]</TableHeaderCell>
+                                    <TableHeaderCell>@L["FullName"]</TableHeaderCell>
+                                    <TableHeaderCell>@L["Department"]</TableHeaderCell>
+                                    <TableHeaderCell>@L["CheckInTime"]</TableHeaderCell>
+                                    <TableHeaderCell>@L["Device"]</TableHeaderCell>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                @foreach (var checkIn in Stats.LatestCheckIns)
+                                {
+                                    <TableRow>
+                                        <TableRowCell>@checkIn.EmployeeId</TableRowCell>
+                                        <TableRowCell>@checkIn.FullName</TableRowCell>
+                                        <TableRowCell>@checkIn.Department</TableRowCell>
+                                        <TableRowCell>@checkIn.CheckInTime.ToString("g")</TableRowCell>
+                                        <TableRowCell>
+                                            <Badge Color="Color.Secondary">@checkIn.DeviceId</Badge>
+                                        </TableRowCell>
+                                    </TableRow>
+                                }
+                            </TableBody>
+                        </Table>
+                    }
+                    else
+                    {
+                        <Alert Color="Color.Info">@L["NoCheckInsFound"]</Alert>
+                    }
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+}
+
+@code {
+    [Inject]
+    private IDashboardAppService DashboardAppService { get; set; } = null!;
+    
+    private DashboardStatsDto? Stats { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            Stats = await DashboardAppService.GetDashboardStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error(ex.Message);
+        }
+    }
+}

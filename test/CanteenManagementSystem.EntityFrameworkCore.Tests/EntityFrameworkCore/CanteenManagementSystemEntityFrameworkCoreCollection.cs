@@ -1,0 +1,9 @@
+﻿using Xunit;
+
+namespace CanteenManagementSystem.EntityFrameworkCore;
+
+[CollectionDefinition(CanteenManagementSystemTestConsts.CollectionDefinitionName)]
+public class CanteenManagementSystemEntityFrameworkCoreCollection : ICollectionFixture<CanteenManagementSystemEntityFrameworkCoreFixture>
+{
+
+}
