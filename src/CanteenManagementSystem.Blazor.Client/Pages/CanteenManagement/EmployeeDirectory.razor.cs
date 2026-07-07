@@ -29,9 +29,11 @@ public partial class EmployeeDirectory
     };
 
     protected CreateEmployeeDto NewEmployee { get; set; } = new();
+    protected UpdateEmployeeDto EditingEmployee { get; set; } = new();
+    protected Guid EditingEmployeeId { get; set; }
 
     protected Modal CreateModal { get; set; } = null!;
-    protected Validations CreateValidationsRef { get; set; } = null!;
+    protected Modal EditModal { get; set; } = null!;
 
     protected bool IsFirstPage => Filter.SkipCount == 0;
     protected bool IsLastPage => Filter.SkipCount + Filter.MaxResultCount >= TotalCount;
@@ -99,6 +101,22 @@ public partial class EmployeeDirectory
         CreateModal.Hide();
     }
 
+    protected void OpenEditModal(EmployeeDto employee)
+    {
+        EditingEmployeeId = employee.Id;
+        EditingEmployee = new UpdateEmployeeDto
+        {
+            FullName = employee.FullName,
+            Department = employee.Department
+        };
+        EditModal.Show();
+    }
+
+    protected void CloseEditModal()
+    {
+        EditModal.Hide();
+    }
+
     protected void OnFilterInput(ChangeEventArgs e)
     {
         Filter.Filter = e.Value?.ToString();
@@ -107,18 +125,63 @@ public partial class EmployeeDirectory
 
     protected async Task CreateEmployeeAsync()
     {
-        if (await CreateValidationsRef.ValidateAll())
+        if (string.IsNullOrWhiteSpace(NewEmployee.EmployeeId) || string.IsNullOrWhiteSpace(NewEmployee.FullName))
+        {
+            await UiMessageService.Error("EmployeeId and FullName are required.");
+            return;
+        }
+
+        try
+        {
+            await EmployeeAppService.CreateAsync(NewEmployee);
+            await UiMessageService.Success("Employee created successfully");
+            CloseCreateModal();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            await UiMessageService.Error($"Error creating employee: {ex.Message}");
+        }
+    }
+
+    protected async Task UpdateEmployeeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(EditingEmployee.FullName))
+        {
+            await UiMessageService.Error("FullName is required.");
+            return;
+        }
+
+        try
+        {
+            await EmployeeAppService.UpdateAsync(EditingEmployeeId, EditingEmployee);
+            await UiMessageService.Success("Employee updated successfully");
+            CloseEditModal();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            await UiMessageService.Error($"Error updating employee: {ex.Message}");
+        }
+    }
+
+    protected async Task DeleteEmployeeAsync(EmployeeDto employee)
+    {
+        var confirmed = await UiMessageService.Confirm(
+            $"Are you sure you want to delete employee '{employee.FullName}'?",
+            "Delete Confirmation");
+
+        if (confirmed)
         {
             try
             {
-                await EmployeeAppService.CreateAsync(NewEmployee);
-                await UiMessageService.Success("Employee created successfully");
-                CloseCreateModal();
+                await EmployeeAppService.DeleteAsync(employee.Id);
+                await UiMessageService.Success("Employee deleted successfully");
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                await UiMessageService.Error($"Error creating employee: {ex.Message}");
+                await UiMessageService.Error($"Error deleting employee: {ex.Message}");
             }
         }
     }

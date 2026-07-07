@@ -1,0 +1,232 @@
+@page "/canteen/companies"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["CompanyMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Building" Class="me-2" />
+            @L["CompanyMaster"]
+        </Heading>
+        <Paragraph>@L["CompanyMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddCompany"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       @onkeyup="OnFilterKeyUp"
+                       placeholder="@L["SearchByNameOrCode"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Companies == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Companies.Count == 0)
+        {
+            <Paragraph>@L["NoCompaniesFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["CompanyName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CompanyCode"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CompanyAddress"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CompanyPhone"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CompanyEmail"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var company in Companies)
+                    {
+                        <TableRow>
+                            <TableRowCell>@company.Name</TableRowCell>
+                            <TableRowCell>@company.Code</TableRowCell>
+                            <TableRowCell>@company.Address</TableRowCell>
+                            <TableRowCell>@company.Phone</TableRowCell>
+                            <TableRowCell>@company.Email</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(company))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteCompanyAsync(company))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Companies.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddCompany"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["CompanyName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Code"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyCodePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyAddress"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Address"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyAddressPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyPhone"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Phone"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyPhonePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyEmail"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Email"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyEmailPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyTaxNumber"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.TaxNumber"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyTaxNumberPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyWebsite"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCompany.Website"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyWebsitePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateCompanyAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditCompany"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["CompanyName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Code"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyCodePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyAddress"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Address"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyAddressPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyPhone"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Phone"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyPhonePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyEmail"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Email"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyEmailPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyTaxNumber"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.TaxNumber"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyTaxNumberPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CompanyWebsite"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCompany.Website"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CompanyWebsitePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateCompanyAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

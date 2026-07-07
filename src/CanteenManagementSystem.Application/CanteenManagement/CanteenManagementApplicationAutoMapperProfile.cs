@@ -19,5 +19,17 @@ public class CanteenManagementApplicationAutoMapperProfile : Profile
         // CanteenCheckIn mappings
         CreateMap<CanteenCheckIn, CanteenCheckInDto>();
         CreateMap<List<CanteenCheckIn>, List<CanteenCheckInDto>>();
+
+        // Category mappings
+        CreateMap<Category, CategoryDto>();
+        CreateMap<List<Category>, List<CategoryDto>>();
+
+        // Department mappings
+        CreateMap<Department, DepartmentDto>();
+        CreateMap<List<Department>, List<DepartmentDto>>();
+
+        // Item mappings
+        CreateMap<Item, ItemDto>();
+        CreateMap<List<Item>, List<ItemDto>>();
     }
 }

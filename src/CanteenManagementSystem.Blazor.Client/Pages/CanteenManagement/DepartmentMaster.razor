@@ -1,0 +1,158 @@
+@page "/canteen/departments"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["DepartmentMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Building" Class="me-2" />
+            @L["DepartmentMaster"]
+        </Heading>
+        <Paragraph>@L["DepartmentMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddDepartment"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       @onkeyup="OnFilterKeyUp"
+                       placeholder="@L["SearchByNameOrCode"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Departments == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Departments.Count == 0)
+        {
+            <Paragraph>@L["NoDepartmentsFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["DepartmentName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CCCode"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var department in Departments)
+                    {
+                        <TableRow>
+                            <TableRowCell>@department.Name</TableRowCell>
+                            <TableRowCell>@(department.CCCode ?? "-")</TableRowCell>
+                            <TableRowCell>@department.CreationTime.ToString("g")</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(department))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteDepartmentAsync(department))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Departments.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddDepartment"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DepartmentName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDepartment.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepartmentNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CCCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDepartment.CCCode"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CCCodePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateDepartmentAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditDepartment"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DepartmentName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDepartment.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepartmentNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CCCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDepartment.CCCode"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CCCodePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateDepartmentAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

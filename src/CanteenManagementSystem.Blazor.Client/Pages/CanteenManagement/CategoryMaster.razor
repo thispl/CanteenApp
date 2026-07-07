@@ -1,0 +1,158 @@
+@page "/canteen/categories"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["CategoryMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Folder" Class="me-2" />
+            @L["CategoryMaster"]
+        </Heading>
+        <Paragraph>@L["CategoryMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddCategory"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       @onkeyup="OnFilterKeyUp"
+                       placeholder="@L["SearchByNameOrCode"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Categories == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Categories.Count == 0)
+        {
+            <Paragraph>@L["NoCategoriesFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["CategoryName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CategoryCode"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var category in Categories)
+                    {
+                        <TableRow>
+                            <TableRowCell>@category.CategoryName</TableRowCell>
+                            <TableRowCell>@(category.CategoryCode ?? "-")</TableRowCell>
+                            <TableRowCell>@category.CreationTime.ToString("g")</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(category))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteCategoryAsync(category))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Categories.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddCategory"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["CategoryName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCategory.CategoryName"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CategoryNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CategoryCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewCategory.CategoryCode"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CategoryCodePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateCategoryAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditCategory"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["CategoryName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCategory.CategoryName"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CategoryNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["CategoryCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingCategory.CategoryCode"
+                       @bind-value:event="oninput"
+                       placeholder="@L["CategoryCodePlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateCategoryAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

@@ -31,6 +31,13 @@ public class CanteenManagementSystemDbContext :
     public DbSet<Employee> Employees { get; set; }
     public DbSet<CanteenCheckIn> CanteenCheckIns { get; set; }
     public DbSet<SyncState> SyncStates { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Item> Items { get; set; }
+    public DbSet<TimeSchedule> TimeSchedules { get; set; }
+    public DbSet<Designation> Designations { get; set; }
+    public DbSet<Company> Companies { get; set; }
+    public DbSet<Device> Devices { get; set; }
 
     #region Entities from the modules
 
@@ -113,6 +120,81 @@ public class CanteenManagementSystemDbContext :
             b.Property(s => s.Key).IsRequired().HasMaxLength(100);
             b.Property(s => s.LastProcessedValue).IsRequired();
             b.HasIndex(s => s.Key).IsUnique();
+        });
+
+        builder.Entity<Category>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Categories", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(c => c.CategoryName).IsRequired().HasMaxLength(100);
+            b.Property(c => c.CategoryCode).HasMaxLength(50);
+            b.HasIndex(c => c.CategoryCode).IsUnique();
+        });
+
+        builder.Entity<Department>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Departments", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(d => d.Name).IsRequired().HasMaxLength(100);
+            b.Property(d => d.CCCode).HasMaxLength(50);
+            b.HasIndex(d => d.CCCode).IsUnique();
+        });
+
+        builder.Entity<Item>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Items", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(i => i.Description).IsRequired().HasMaxLength(200);
+            b.Property(i => i.Price).IsRequired().HasPrecision(18, 2);
+        });
+
+        builder.Entity<TimeSchedule>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "TimeSchedules", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(t => t.Name).IsRequired().HasMaxLength(100);
+            b.Property(t => t.Code).HasMaxLength(50);
+            b.Property(t => t.StartTime).IsRequired();
+            b.Property(t => t.EndTime).IsRequired();
+            b.HasIndex(t => t.Code).IsUnique();
+        });
+
+        builder.Entity<Designation>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Designations", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(d => d.Title).IsRequired().HasMaxLength(100);
+            b.Property(d => d.Code).HasMaxLength(50);
+            b.Property(d => d.Description).HasMaxLength(200);
+            b.HasIndex(d => d.Code).IsUnique();
+        });
+
+        builder.Entity<Company>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Companies", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(c => c.Name).IsRequired().HasMaxLength(200);
+            b.Property(c => c.Code).HasMaxLength(50);
+            b.Property(c => c.Address).HasMaxLength(500);
+            b.Property(c => c.Phone).HasMaxLength(50);
+            b.Property(c => c.Email).HasMaxLength(100);
+            b.Property(c => c.TaxNumber).HasMaxLength(100);
+            b.Property(c => c.Website).HasMaxLength(200);
+            b.HasIndex(c => c.Code).IsUnique();
+        });
+
+        builder.Entity<Device>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "Devices", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(d => d.DeviceId).IsRequired().HasMaxLength(100);
+            b.Property(d => d.Name).IsRequired().HasMaxLength(100);
+            b.Property(d => d.IpAddress).HasMaxLength(50);
+            b.Property(d => d.Location).HasMaxLength(200);
+            b.Property(d => d.Model).HasMaxLength(100);
+            b.Property(d => d.SerialNumber).HasMaxLength(100);
+            b.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
+            b.HasIndex(d => d.DeviceId).IsUnique();
         });
     }
 }

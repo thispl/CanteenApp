@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -211,14 +211,14 @@ public class CanteenManagementSystemDbMigrationService : ITransientDependency
     {
         var currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
 
-        while (currentDirectory != null && Directory.GetParent(currentDirectory.FullName) != null)
+        while (currentDirectory != null)
         {
-            currentDirectory = Directory.GetParent(currentDirectory.FullName);
-
-            if (currentDirectory != null && Directory.GetFiles(currentDirectory.FullName).FirstOrDefault(f => f.EndsWith(".sln") || f.EndsWith(".slnx")) != null)
+            if (Directory.GetFiles(currentDirectory.FullName).FirstOrDefault(f => f.EndsWith(".sln") || f.EndsWith(".slnx")) != null)
             {
                 return currentDirectory.FullName;
             }
+
+            currentDirectory = Directory.GetParent(currentDirectory.FullName);
         }
 
         return null;

@@ -1,0 +1,253 @@
+@page "/canteen/devices"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["DeviceMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Settings" Class="me-2" />
+            @L["DeviceMaster"]
+        </Heading>
+        <Paragraph>@L["DeviceMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddDevice"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       @onkeyup="OnFilterKeyUp"
+                       placeholder="@L["SearchByNameOrCode"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Devices == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Devices.Count == 0)
+        {
+            <Paragraph>@L["NoDevicesFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["DeviceId"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DeviceName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DeviceIpAddress"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DevicePort"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DeviceStatus"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DeviceLocation"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var device in Devices)
+                    {
+                        <TableRow>
+                            <TableRowCell>@device.DeviceId</TableRowCell>
+                            <TableRowCell>@device.Name</TableRowCell>
+                            <TableRowCell>@device.IpAddress</TableRowCell>
+                            <TableRowCell>@device.Port</TableRowCell>
+                            <TableRowCell>
+                                <Badge Color="@(device.Status == DeviceStatus.Active ? Color.Success : Color.Secondary)">
+                                    @L[$"DeviceStatus{device.Status}"]
+                                </Badge>
+                            </TableRowCell>
+                            <TableRowCell>@device.Location</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(device))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteDeviceAsync(device))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Devices.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddDevice"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DeviceId"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.DeviceId"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceIdPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceIpAddress"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.IpAddress"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceIpAddressPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DevicePort"]</FieldLabel>
+                <input class="form-control" type="number"
+                       @bind-value="NewDevice.Port"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DevicePortPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceStatus"]</FieldLabel>
+                <select class="form-control" @bind="NewDevice.Status">
+                    <option value="@DeviceStatus.Active">@L["DeviceStatusActive"]</option>
+                    <option value="@DeviceStatus.Inactive">@L["DeviceStatusInactive"]</option>
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceLocation"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.Location"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceLocationPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceModel"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.Model"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceModelPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceSerialNumber"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDevice.SerialNumber"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceSerialNumberPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateDeviceAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditDevice"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DeviceId"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.DeviceId"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceIdPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.Name"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceIpAddress"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.IpAddress"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceIpAddressPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DevicePort"]</FieldLabel>
+                <input class="form-control" type="number"
+                       @bind-value="EditingDevice.Port"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DevicePortPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceStatus"]</FieldLabel>
+                <select class="form-control" @bind="EditingDevice.Status">
+                    <option value="@DeviceStatus.Active">@L["DeviceStatusActive"]</option>
+                    <option value="@DeviceStatus.Inactive">@L["DeviceStatusInactive"]</option>
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceLocation"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.Location"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceLocationPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceModel"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.Model"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceModelPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DeviceSerialNumber"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDevice.SerialNumber"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DeviceSerialNumberPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateDeviceAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

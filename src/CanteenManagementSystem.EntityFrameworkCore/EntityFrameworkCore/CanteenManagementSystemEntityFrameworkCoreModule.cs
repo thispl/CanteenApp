@@ -53,6 +53,9 @@ public class CanteenManagementSystemEntityFrameworkCoreModule : AbpModule
             options.AddRepository<Employee, EfCoreEmployeeRepository>();
             options.AddRepository<CanteenCheckIn, EfCoreCanteenCheckInRepository>();
             options.AddRepository<SyncState, EfCoreSyncStateRepository>();
+            options.AddRepository<Category, EfCoreCategoryRepository>();
+            options.AddRepository<Department, EfCoreDepartmentRepository>();
+            options.AddRepository<Item, EfCoreItemRepository>();
         });
 
         // Register ZkTeco external DbContext for read-only access

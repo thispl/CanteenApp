@@ -83,6 +83,62 @@ public class CanteenManagementSystemMenuContributor : IMenuContributor
             order: 2
         ));
 
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.CategoryMaster,
+            l["Menu:CategoryMaster"],
+            "/canteen/categories",
+            icon: "fas fa-tags",
+            order: 3
+        ).RequirePermissions(CanteenManagementSystemPermissions.Category));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.DepartmentMaster,
+            l["Menu:DepartmentMaster"],
+            "/canteen/departments",
+            icon: "fas fa-building",
+            order: 4
+        ).RequirePermissions(CanteenManagementSystemPermissions.Department));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.ItemMaster,
+            l["Menu:ItemMaster"],
+            "/canteen/items",
+            icon: "fas fa-utensils",
+            order: 5
+        ).RequirePermissions(CanteenManagementSystemPermissions.Item));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.TimeScheduleMaster,
+            l["Menu:TimeScheduleMaster"],
+            "/canteen/time-schedules",
+            icon: "fas fa-clock",
+            order: 6
+        ).RequirePermissions(CanteenManagementSystemPermissions.TimeSchedule));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.DesignationMaster,
+            l["Menu:DesignationMaster"],
+            "/canteen/designations",
+            icon: "fas fa-id-badge",
+            order: 7
+        ).RequirePermissions(CanteenManagementSystemPermissions.Designation));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.CompanyMaster,
+            l["Menu:CompanyMaster"],
+            "/canteen/companies",
+            icon: "fas fa-building",
+            order: 8
+        ).RequirePermissions(CanteenManagementSystemPermissions.Company));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.DeviceMaster,
+            l["Menu:DeviceMaster"],
+            "/canteen/devices",
+            icon: "fas fa-microchip",
+            order: 9
+        ).RequirePermissions(CanteenManagementSystemPermissions.Device));
+
         context.Menu.AddItem(canteenManagement);
 
         if (MultiTenancyConsts.IsEnabled)

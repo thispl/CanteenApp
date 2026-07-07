@@ -1,0 +1,172 @@
+@page "/canteen/designations"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["DesignationMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.User" Class="me-2" />
+            @L["DesignationMaster"]
+        </Heading>
+        <Paragraph>@L["DesignationMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddDesignation"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center">
+            <Column ColumnSize="ColumnSize.Is8">
+                <input class="form-control" type="text"
+                       value="@Filter.Filter"
+                       @oninput="OnFilterInput"
+                       @onkeyup="OnFilterKeyUp"
+                       placeholder="@L["SearchByNameOrCode"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is4" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Designations == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Designations.Count == 0)
+        {
+            <Paragraph>@L["NoDesignationsFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["DesignationTitle"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DesignationCode"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DesignationDescription"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var designation in Designations)
+                    {
+                        <TableRow>
+                            <TableRowCell>@designation.Title</TableRowCell>
+                            <TableRowCell>@(designation.Code ?? "-")</TableRowCell>
+                            <TableRowCell>@(designation.Description ?? "-")</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(designation))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteDesignationAsync(designation))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Designations.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddDesignation"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DesignationTitle"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDesignation.Title"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationTitlePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DesignationCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDesignation.Code"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationCodePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DesignationDescription"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDesignation.Description"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationDescriptionPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateDesignationAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditDesignation"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["DesignationTitle"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDesignation.Title"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationTitlePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DesignationCode"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDesignation.Code"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationCodePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DesignationDescription"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDesignation.Description"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DesignationDescriptionPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateDesignationAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

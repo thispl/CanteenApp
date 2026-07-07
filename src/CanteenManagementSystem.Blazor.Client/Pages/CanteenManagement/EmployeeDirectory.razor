@@ -58,6 +58,7 @@
                         <TableHeaderCell>@L["FullName"]</TableHeaderCell>
                         <TableHeaderCell>@L["Department"]</TableHeaderCell>
                         <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -68,6 +69,16 @@
                             <TableRowCell>@employee.FullName</TableRowCell>
                             <TableRowCell>@(employee.Department ?? "-")</TableRowCell>
                             <TableRowCell>@employee.CreationTime.ToString("g")</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(employee))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteEmployeeAsync(employee))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
                         </TableRow>
                     }
                 </TableBody>
@@ -96,37 +107,60 @@
             <CloseButton Clicked="CloseCreateModal" />
         </ModalHeader>
         <ModalBody>
-            <Validations @ref="CreateValidationsRef" Model="NewEmployee" ValidateOnLoad="false">
-                <Validation Validator="ValidationRule.IsNotEmpty">
-                    <Field>
-                        <FieldLabel>@L["EmployeeId"]</FieldLabel>
-                        <input class="form-control" type="text"
-                               value="@NewEmployee.EmployeeId"
-                               @oninput="@((e) => NewEmployee.EmployeeId = e.Value?.ToString() ?? string.Empty)"
-                               placeholder="@L["EmployeeIdPlaceholder"]" />
-                    </Field>
-                </Validation>
-                <Validation Validator="ValidationRule.IsNotEmpty">
-                    <Field>
-                        <FieldLabel>@L["FullName"]</FieldLabel>
-                        <input class="form-control" type="text"
-                               value="@NewEmployee.FullName"
-                               @oninput="@((e) => NewEmployee.FullName = e.Value?.ToString() ?? string.Empty)"
-                               placeholder="@L["FullNamePlaceholder"]" />
-                    </Field>
-                </Validation>
-                <Field>
-                    <FieldLabel>@L["Department"]</FieldLabel>
-                    <input class="form-control" type="text"
-                           value="@NewEmployee.Department"
-                           @oninput="@((e) => NewEmployee.Department = e.Value?.ToString())"
-                           placeholder="@L["DepartmentPlaceholder"]" />
-                </Field>
-            </Validations>
+            <Field>
+                <FieldLabel>@L["EmployeeId"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewEmployee.EmployeeId"
+                       @bind-value:event="oninput"
+                       placeholder="@L["EmployeeIdPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["FullName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewEmployee.FullName"
+                       @bind-value:event="oninput"
+                       placeholder="@L["FullNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Department"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewEmployee.Department"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepartmentPlaceholder"]" />
+            </Field>
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
             <Button Color="Color.Primary" Clicked="CreateEmployeeAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditEmployee"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["FullName"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingEmployee.FullName"
+                       @bind-value:event="oninput"
+                       placeholder="@L["FullNamePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Department"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingEmployee.Department"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepartmentPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateEmployeeAsync">@L["Save"]</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>

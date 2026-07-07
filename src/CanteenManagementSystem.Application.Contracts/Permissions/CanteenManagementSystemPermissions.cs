@@ -4,8 +4,45 @@ public static class CanteenManagementSystemPermissions
 {
     public const string GroupName = "CanteenManagementSystem";
 
+    // Category permissions
+    public const string Category = GroupName + ".Category";
+    public const string CategoryCreate = Category + ".Create";
+    public const string CategoryEdit = Category + ".Edit";
+    public const string CategoryDelete = Category + ".Delete";
 
-    
-    //Add your own permission names. Example:
-    //public const string MyPermission1 = GroupName + ".MyPermission1";
+    // Department permissions
+    public const string Department = GroupName + ".Department";
+    public const string DepartmentCreate = Department + ".Create";
+    public const string DepartmentEdit = Department + ".Edit";
+    public const string DepartmentDelete = Department + ".Delete";
+
+    // Item permissions
+    public const string Item = GroupName + ".Item";
+    public const string ItemCreate = Item + ".Create";
+    public const string ItemEdit = Item + ".Edit";
+    public const string ItemDelete = Item + ".Delete";
+
+    // Time Schedule permissions
+    public const string TimeSchedule = GroupName + ".TimeSchedule";
+    public const string TimeScheduleCreate = TimeSchedule + ".Create";
+    public const string TimeScheduleEdit = TimeSchedule + ".Edit";
+    public const string TimeScheduleDelete = TimeSchedule + ".Delete";
+
+    // Designation permissions
+    public const string Designation = GroupName + ".Designation";
+    public const string DesignationCreate = Designation + ".Create";
+    public const string DesignationEdit = Designation + ".Edit";
+    public const string DesignationDelete = Designation + ".Delete";
+
+    // Company permissions
+    public const string Company = GroupName + ".Company";
+    public const string CompanyCreate = Company + ".Create";
+    public const string CompanyEdit = Company + ".Edit";
+    public const string CompanyDelete = Company + ".Delete";
+
+    // Device permissions
+    public const string Device = GroupName + ".Device";
+    public const string DeviceCreate = Device + ".Create";
+    public const string DeviceEdit = Device + ".Edit";
+    public const string DeviceDelete = Device + ".Delete";
 }

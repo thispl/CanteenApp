@@ -11,6 +11,13 @@ public class CanteenManagementSystemMenus
     public const string Dashboard = CanteenManagementGroup + ".Dashboard";
     public const string EmployeeDirectory = CanteenManagementGroup + ".Employees";
     public const string LiveCanteenLogs = CanteenManagementGroup + ".CheckIns";
+    public const string CategoryMaster = CanteenManagementGroup + ".Categories";
+    public const string DepartmentMaster = CanteenManagementGroup + ".Departments";
+    public const string ItemMaster = CanteenManagementGroup + ".Items";
+    public const string TimeScheduleMaster = CanteenManagementGroup + ".TimeSchedules";
+    public const string DesignationMaster = CanteenManagementGroup + ".Designations";
+    public const string CompanyMaster = CanteenManagementGroup + ".Companies";
+    public const string DeviceMaster = CanteenManagementGroup + ".Devices";
 
     // Admin Group
     public const string AdminGroup = Prefix + ".Admin";
