@@ -6,6 +6,7 @@ using CanteenManagementSystem.CanteenManagement.Dtos;
 using CanteenManagementSystem.CanteenManagement.Entities;
 using CanteenManagementSystem.CanteenManagement.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -20,13 +21,16 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class CompanyAppService : ApplicationService, ICompanyAppService
 {
     private readonly ICompanyRepository _companyRepository;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public CompanyAppService(
         ICompanyRepository companyRepository,
+        IDepartmentRepository departmentRepository,
         IGuidGenerator guidGenerator)
     {
         _companyRepository = companyRepository;
+        _departmentRepository = departmentRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -110,6 +114,11 @@ public class CompanyAppService : ApplicationService, ICompanyAppService
 
     public virtual async Task DeleteAsync(Guid id)
     {
+        if (await (await _departmentRepository.GetQueryableAsync()).AnyAsync(d => d.CompanyId == id))
+        {
+            throw new UserFriendlyException("Cannot delete this company because it is assigned to one or more departments.");
+        }
+
         await _companyRepository.DeleteAsync(id);
     }
 

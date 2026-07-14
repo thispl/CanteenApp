@@ -59,6 +59,7 @@
                         <TableHeaderCell>@L["TimeScheduleCode"]</TableHeaderCell>
                         <TableHeaderCell>@L["StartTime"]</TableHeaderCell>
                         <TableHeaderCell>@L["EndTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Item"]</TableHeaderCell>
                         <TableHeaderCell>@L["Actions"]</TableHeaderCell>
                     </TableRow>
                 </TableHeader>
@@ -70,6 +71,7 @@
                             <TableRowCell>@timeSchedule.Code</TableRowCell>
                             <TableRowCell>@timeSchedule.StartTime.ToString("hh\\:mm")</TableRowCell>
                             <TableRowCell>@timeSchedule.EndTime.ToString("hh\\:mm")</TableRowCell>
+                            <TableRowCell>@timeSchedule.ItemName</TableRowCell>
                             <TableRowCell>
                                 <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(timeSchedule))">
                                     <Icon Name="IconName.Edit" />
@@ -134,6 +136,16 @@
                        @bind="NewTimeSchedule.EndTime"
                        @bind:format="hh\\:mm" />
             </Field>
+            <Field>
+                <FieldLabel>@L["Item"]</FieldLabel>
+                <select class="form-select" @bind="NewTimeSchedule.ItemId">
+                    <option value="@Guid.Empty">@L["SelectItem"]</option>
+                    @foreach (var item in Items)
+                    {
+                        <option value="@item.Id">@item.Description (@item.Price.ToString("C"))</option>
+                    }
+                </select>
+            </Field>
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
@@ -174,6 +186,16 @@
                 <input class="form-control" type="time"
                        @bind="EditingTimeSchedule.EndTime"
                        @bind:format="hh\\:mm" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Item"]</FieldLabel>
+                <select class="form-select" @bind="EditingTimeSchedule.ItemId">
+                    <option value="@Guid.Empty">@L["SelectItem"]</option>
+                    @foreach (var item in Items)
+                    {
+                        <option value="@item.Id">@item.Description (@item.Price.ToString("C"))</option>
+                    }
+                </select>
             </Field>
         </ModalBody>
         <ModalFooter>

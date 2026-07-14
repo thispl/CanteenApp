@@ -38,6 +38,8 @@ public class CanteenManagementSystemDbContext :
     public DbSet<Designation> Designations { get; set; }
     public DbSet<Company> Companies { get; set; }
     public DbSet<Device> Devices { get; set; }
+    public DbSet<MealTransaction> MealTransactions { get; set; }
+    public DbSet<CashDeposit> CashDeposits { get; set; }
 
     #region Entities from the modules
 
@@ -98,8 +100,13 @@ public class CanteenManagementSystemDbContext :
             b.ConfigureByConvention(); //auto configure for the base class props
             b.Property(e => e.EmployeeId).IsRequired().HasMaxLength(50);
             b.Property(e => e.FullName).IsRequired().HasMaxLength(100);
-            b.Property(e => e.Department).HasMaxLength(100);
+            b.HasOne(e => e.Department).WithMany().HasForeignKey(e => e.DepartmentId).IsRequired(false);
+            b.HasOne(e => e.Category).WithMany().HasForeignKey(e => e.CategoryId).IsRequired(false);
+            b.HasOne(e => e.Designation).WithMany().HasForeignKey(e => e.DesignationId).IsRequired(false);
             b.HasIndex(e => e.EmployeeId).IsUnique();
+            b.HasIndex(e => e.DepartmentId);
+            b.HasIndex(e => e.CategoryId);
+            b.HasIndex(e => e.DesignationId);
         });
 
         builder.Entity<CanteenCheckIn>(b =>
@@ -137,7 +144,9 @@ public class CanteenManagementSystemDbContext :
             b.ConfigureByConvention();
             b.Property(d => d.Name).IsRequired().HasMaxLength(100);
             b.Property(d => d.CCCode).HasMaxLength(50);
-            b.HasIndex(d => d.CCCode).IsUnique();
+            b.HasOne(d => d.Company).WithMany().HasForeignKey(d => d.CompanyId).IsRequired(false);
+            b.HasIndex(d => d.CCCode).IsUnique().HasFilter("[CCCode] IS NOT NULL");
+            b.HasIndex(d => d.CompanyId);
         });
 
         builder.Entity<Item>(b =>
@@ -156,7 +165,9 @@ public class CanteenManagementSystemDbContext :
             b.Property(t => t.Code).HasMaxLength(50);
             b.Property(t => t.StartTime).IsRequired();
             b.Property(t => t.EndTime).IsRequired();
+            b.HasOne(t => t.Item).WithMany().HasForeignKey(t => t.ItemId).IsRequired(false);
             b.HasIndex(t => t.Code).IsUnique();
+            b.HasIndex(t => t.ItemId);
         });
 
         builder.Entity<Designation>(b =>
@@ -195,6 +206,34 @@ public class CanteenManagementSystemDbContext :
             b.Property(d => d.SerialNumber).HasMaxLength(100);
             b.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
             b.HasIndex(d => d.DeviceId).IsUnique();
+        });
+
+        builder.Entity<MealTransaction>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "MealTransactions", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(t => t.Price).IsRequired().HasPrecision(18, 2);
+            b.Property(t => t.PunchTime).IsRequired();
+            b.Property(t => t.Source).HasConversion<string>().HasMaxLength(20);
+            b.HasOne(t => t.Employee).WithMany().HasForeignKey(t => t.EmployeeId).IsRequired();
+            b.HasOne(t => t.Device).WithMany().HasForeignKey(t => t.DeviceId).IsRequired();
+            b.HasOne(t => t.TimeSchedule).WithMany().HasForeignKey(t => t.TimeScheduleId).IsRequired();
+            b.HasOne(t => t.Item).WithMany().HasForeignKey(t => t.ItemId).IsRequired();
+            b.HasIndex(t => new { t.EmployeeId, t.PunchTime }).IsUnique();
+            b.HasIndex(t => t.PunchTime);
+            b.HasIndex(t => t.Source);
+        });
+
+        builder.Entity<CashDeposit>(b =>
+        {
+            b.ToTable(CanteenManagementSystemConsts.DbTablePrefix + "CashDeposits", CanteenManagementSystemConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(d => d.Amount).IsRequired().HasPrecision(18, 2);
+            b.Property(d => d.DepositDate).IsRequired();
+            b.Property(d => d.Notes).HasMaxLength(500);
+            b.HasOne(d => d.Employee).WithMany().HasForeignKey(d => d.EmployeeId).IsRequired();
+            b.HasIndex(d => d.EmployeeId);
+            b.HasIndex(d => d.DepositDate);
         });
     }
 }

@@ -139,7 +139,58 @@ public class CanteenManagementSystemMenuContributor : IMenuContributor
             order: 9
         ).RequirePermissions(CanteenManagementSystemPermissions.Device));
 
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.MealTransactionMaster,
+            l["Menu:MealTransactionMaster"],
+            "/canteen/meal-transactions",
+            icon: "fas fa-receipt",
+            order: 10
+        ));
+
+        canteenManagement.AddItem(new ApplicationMenuItem(
+            CanteenManagementSystemMenus.CashDepositMaster,
+            l["Menu:CashDepositMaster"],
+            "/canteen/cash-deposits",
+            icon: "fas fa-wallet",
+            order: 11
+        ));
+
         context.Menu.AddItem(canteenManagement);
+
+        // Reports Section
+        var reportsGroup = new ApplicationMenuItem(
+            CanteenManagementSystemMenus.ReportsGroup,
+            l["Menu:Reports"],
+            icon: "fas fa-chart-bar",
+            order: 3
+        );
+
+        var dailyReports = new ApplicationMenuItem(
+            CanteenManagementSystemMenus.DailyReportsGroup,
+            l["Menu:DailyReports"],
+            icon: "fas fa-calendar-day",
+            order: 0
+        );
+        dailyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.DailyFoodWiseReport, l["Menu:DailyFoodWiseReport"], "/reports/daily-food-wise", icon: "fas fa-utensils", order: 0));
+        dailyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.DailyEmployeeWiseReport, l["Menu:DailyEmployeeWiseReport"], "/reports/daily-employee-wise", icon: "fas fa-user", order: 1));
+        dailyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.DailySummaryReport, l["Menu:DailySummaryReport"], "/reports/daily-summary", icon: "fas fa-list-alt", order: 2));
+        dailyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.EmployeeDailySummaryReport, l["Menu:EmployeeDailySummaryReport"], "/reports/employee-daily-summary", icon: "fas fa-table", order: 3));
+        reportsGroup.AddItem(dailyReports);
+
+        var monthlyReports = new ApplicationMenuItem(
+            CanteenManagementSystemMenus.MonthlyReportsGroup,
+            l["Menu:MonthlyReports"],
+            icon: "fas fa-calendar-alt",
+            order: 1
+        );
+        monthlyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.MonthlyFoodWiseReport, l["Menu:MonthlyFoodWiseReport"], "/reports/monthly-food-wise", icon: "fas fa-utensils", order: 0));
+        monthlyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.MonthlyEmployeeWiseReport, l["Menu:MonthlyEmployeeWiseReport"], "/reports/monthly-employee-wise", icon: "fas fa-users", order: 1));
+        monthlyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.MonthlyDepartmentWiseReport, l["Menu:MonthlyDepartmentWiseReport"], "/reports/monthly-department-wise", icon: "fas fa-building", order: 2));
+        monthlyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.EmployeeMonthlySummaryReport, l["Menu:EmployeeMonthlySummaryReport"], "/reports/employee-monthly-summary", icon: "fas fa-table", order: 3));
+        monthlyReports.AddItem(new ApplicationMenuItem(CanteenManagementSystemMenus.ManualPunchReport, l["Menu:ManualPunchReport"], "/reports/manual-punch", icon: "fas fa-hand-pointer", order: 4));
+        reportsGroup.AddItem(monthlyReports);
+
+        context.Menu.AddItem(reportsGroup);
 
         if (MultiTenancyConsts.IsEnabled)
         {

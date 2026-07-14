@@ -24,15 +24,24 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class EmployeeAppService : ApplicationService, IEmployeeAppService
 {
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IDesignationRepository _designationRepository;
     private readonly IGuidGenerator _guidGenerator;
     private readonly ZkTecoDbContext _zkTecoDbContext;
 
     public EmployeeAppService(
         IEmployeeRepository employeeRepository,
+        IDepartmentRepository departmentRepository,
+        ICategoryRepository categoryRepository,
+        IDesignationRepository designationRepository,
         IGuidGenerator guidGenerator,
         ZkTecoDbContext zkTecoDbContext)
     {
         _employeeRepository = employeeRepository;
+        _departmentRepository = departmentRepository;
+        _categoryRepository = categoryRepository;
+        _designationRepository = designationRepository;
         _guidGenerator = guidGenerator;
         _zkTecoDbContext = zkTecoDbContext;
     }
@@ -40,7 +49,7 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
     public virtual async Task<EmployeeDto?> GetAsync(Guid id)
     {
         var employee = await _employeeRepository.GetAsync(id);
-        return ObjectMapper.Map<Employee, EmployeeDto>(employee);
+        return MapWithRelatedNames(employee);
     }
 
     public virtual async Task<EmployeeDto?> GetByEmployeeIdAsync(string employeeId)
@@ -50,19 +59,24 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
         {
             return null;
         }
-        return ObjectMapper.Map<Employee, EmployeeDto>(employee);
+        return MapWithRelatedNames(employee);
     }
 
     public virtual async Task<PagedResultDto<EmployeeDto>> GetListAsync(EmployeeListFilterDto input)
     {
-        var count = await _employeeRepository.GetCountAsync(input.Filter, input.Department);
+        var count = await _employeeRepository.GetCountAsync(
+            input.Filter,
+            input.DepartmentId,
+            input.CategoryId,
+            input.DesignationId);
         var employees = await _employeeRepository.GetListAsync(
             input.Filter,
-            input.Department,
+            input.DepartmentId,
+            input.CategoryId,
+            input.DesignationId,
             true,
             CancellationToken.None);
 
-        var totalCount = employees.Count;
         var pagedEmployees = employees
             .Skip(input.SkipCount)
             .Take(input.MaxResultCount)
@@ -70,7 +84,7 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
 
         return new PagedResultDto<EmployeeDto>(
             count,
-            ObjectMapper.Map<List<Employee>, List<EmployeeDto>>(pagedEmployees));
+            pagedEmployees.Select(MapWithRelatedNames).ToList());
     }
 
     public virtual async Task<EmployeeDto> CreateAsync(CreateEmployeeDto input)
@@ -81,27 +95,39 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
             throw new UserFriendlyException($"Employee with ID '{input.EmployeeId}' already exists.");
         }
 
+        await ValidateForeignKeysAsync(input.DepartmentId, input.CategoryId, input.DesignationId);
+
         var employee = new Employee(
             _guidGenerator.Create(),
             input.EmployeeId,
             input.FullName,
-            input.Department);
+            input.DepartmentId,
+            input.CategoryId,
+            input.DesignationId);
 
         await _employeeRepository.InsertAsync(employee);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<Employee, EmployeeDto>(employee);
+        var createdEmployee = await _employeeRepository.GetAsync(employee.Id);
+        return MapWithRelatedNames(createdEmployee);
     }
 
     public virtual async Task<EmployeeDto> UpdateAsync(Guid id, UpdateEmployeeDto input)
     {
         var employee = await _employeeRepository.GetAsync(id);
 
+        await ValidateForeignKeysAsync(input.DepartmentId, input.CategoryId, input.DesignationId);
+
         employee.SetFullName(input.FullName);
-        employee.SetDepartment(input.Department);
+        employee.SetDepartment(input.DepartmentId);
+        employee.SetCategory(input.CategoryId);
+        employee.SetDesignation(input.DesignationId);
 
         await _employeeRepository.UpdateAsync(employee);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<Employee, EmployeeDto>(employee);
+        var updatedEmployee = await _employeeRepository.GetAsync(employee.Id);
+        return MapWithRelatedNames(updatedEmployee);
     }
 
     public virtual async Task DeleteAsync(Guid id)
@@ -135,8 +161,7 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
                 var employee = new Employee(
                     _guidGenerator.Create(),
                     extEmp.EnrollNumber,
-                    extEmp.Name,
-                    null); // Department not available in ZKTeco
+                    extEmp.Name); // Department/Category/Designation not available in ZKTeco
 
                 await _employeeRepository.InsertAsync(employee, autoSave: true);
                 importedCount++;
@@ -144,5 +169,32 @@ public class EmployeeAppService : ApplicationService, IEmployeeAppService
         }
 
         return importedCount;
+    }
+
+    private async Task ValidateForeignKeysAsync(Guid? departmentId, Guid? categoryId, Guid? designationId)
+    {
+        if (departmentId.HasValue && !await (await _departmentRepository.GetQueryableAsync()).AnyAsync(d => d.Id == departmentId.Value))
+        {
+            throw new UserFriendlyException($"Department with ID '{departmentId.Value}' does not exist.");
+        }
+
+        if (categoryId.HasValue && !await (await _categoryRepository.GetQueryableAsync()).AnyAsync(c => c.Id == categoryId.Value))
+        {
+            throw new UserFriendlyException($"Category with ID '{categoryId.Value}' does not exist.");
+        }
+
+        if (designationId.HasValue && !await (await _designationRepository.GetQueryableAsync()).AnyAsync(d => d.Id == designationId.Value))
+        {
+            throw new UserFriendlyException($"Designation with ID '{designationId.Value}' does not exist.");
+        }
+    }
+
+    private EmployeeDto MapWithRelatedNames(Employee employee)
+    {
+        var dto = ObjectMapper.Map<Employee, EmployeeDto>(employee);
+        dto.DepartmentName = employee.Department?.Name;
+        dto.CategoryName = employee.Category?.CategoryName;
+        dto.DesignationName = employee.Designation?.Title;
+        return dto;
     }
 }

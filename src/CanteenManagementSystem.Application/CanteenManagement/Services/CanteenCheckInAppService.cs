@@ -130,7 +130,7 @@ public class CanteenCheckInAppService : ApplicationService, ICanteenCheckInAppSe
             Id = checkIn.Id,
             EmployeeId = checkIn.EmployeeId,
             FullName = employee?.FullName ?? "Unknown",
-            Department = employee?.Department,
+            Department = employee?.Department?.Name,
             DeviceId = checkIn.DeviceId,
             CheckInTime = checkIn.CheckInTime
         };

@@ -31,7 +31,9 @@ public interface IEmployeeRepository : IRepository<Employee, Guid>
     /// </summary>
     Task<List<Employee>> GetListAsync(
         string? filter = null,
-        string? department = null,
+        Guid? departmentId = null,
+        Guid? categoryId = null,
+        Guid? designationId = null,
         bool includeDetails = true,
         CancellationToken cancellationToken = default);
 
@@ -40,6 +42,8 @@ public interface IEmployeeRepository : IRepository<Employee, Guid>
     /// </summary>
     Task<long> GetCountAsync(
         string? filter = null,
-        string? department = null,
+        Guid? departmentId = null,
+        Guid? categoryId = null,
+        Guid? designationId = null,
         CancellationToken cancellationToken = default);
 }

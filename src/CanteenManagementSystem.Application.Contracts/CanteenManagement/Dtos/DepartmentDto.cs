@@ -10,6 +10,8 @@ public class DepartmentDto : AuditedEntityDto<Guid>
 {
     public string Name { get; set; } = null!;
     public string? CCCode { get; set; }
+    public Guid? CompanyId { get; set; }
+    public string? CompanyName { get; set; }
 }
 
 /// <summary>
@@ -19,6 +21,7 @@ public class CreateDepartmentDto
 {
     public string Name { get; set; } = string.Empty;
     public string? CCCode { get; set; }
+    public Guid? CompanyId { get; set; }
 }
 
 /// <summary>
@@ -28,6 +31,7 @@ public class UpdateDepartmentDto
 {
     public string Name { get; set; } = string.Empty;
     public string? CCCode { get; set; }
+    public Guid? CompanyId { get; set; }
 }
 
 /// <summary>

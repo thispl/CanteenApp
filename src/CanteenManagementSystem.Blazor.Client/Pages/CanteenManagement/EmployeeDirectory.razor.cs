@@ -17,9 +17,21 @@ public partial class EmployeeDirectory
     protected IEmployeeAppService EmployeeAppService { get; set; } = null!;
 
     [Inject]
+    protected IDepartmentAppService DepartmentAppService { get; set; } = null!;
+
+    [Inject]
+    protected ICategoryAppService CategoryAppService { get; set; } = null!;
+
+    [Inject]
+    protected IDesignationAppService DesignationAppService { get; set; } = null!;
+
+    [Inject]
     protected IUiMessageService UiMessageService { get; set; } = null!;
 
     protected IReadOnlyList<EmployeeDto> Employees { get; set; } = new List<EmployeeDto>();
+    protected IReadOnlyList<DepartmentDto> Departments { get; set; } = new List<DepartmentDto>();
+    protected IReadOnlyList<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
+    protected IReadOnlyList<DesignationDto> Designations { get; set; } = new List<DesignationDto>();
     protected long TotalCount { get; set; }
 
     protected EmployeeListFilterDto Filter { get; set; } = new()
@@ -40,7 +52,27 @@ public partial class EmployeeDirectory
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLookupDataAsync();
         await LoadDataAsync();
+    }
+
+    protected async Task LoadLookupDataAsync()
+    {
+        try
+        {
+            var departments = await DepartmentAppService.GetListAsync(new DepartmentListFilterDto { MaxResultCount = 1000 });
+            Departments = departments.Items;
+
+            var categories = await CategoryAppService.GetListAsync(new CategoryListFilterDto { MaxResultCount = 1000 });
+            Categories = categories.Items;
+
+            var designations = await DesignationAppService.GetListAsync(new DesignationListFilterDto { MaxResultCount = 1000 });
+            Designations = designations.Items;
+        }
+        catch (Exception ex)
+        {
+            await UiMessageService.Error($"Error loading lookup data: {ex.Message}");
+        }
     }
 
     protected async Task LoadDataAsync()
@@ -107,7 +139,9 @@ public partial class EmployeeDirectory
         EditingEmployee = new UpdateEmployeeDto
         {
             FullName = employee.FullName,
-            Department = employee.Department
+            DepartmentId = employee.DepartmentId,
+            CategoryId = employee.CategoryId,
+            DesignationId = employee.DesignationId
         };
         EditModal.Show();
     }

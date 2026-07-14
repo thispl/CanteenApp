@@ -22,7 +22,20 @@ public class Employee : FullAuditedEntity<Guid>
     /// <summary>
     /// Department the employee belongs to (optional)
     /// </summary>
-    public virtual string? Department { get; protected set; }
+    public virtual Guid? DepartmentId { get; protected set; }
+    public virtual Department? Department { get; protected set; }
+
+    /// <summary>
+    /// Category the employee belongs to (optional)
+    /// </summary>
+    public virtual Guid? CategoryId { get; protected set; }
+    public virtual Category? Category { get; protected set; }
+
+    /// <summary>
+    /// Designation of the employee (optional)
+    /// </summary>
+    public virtual Guid? DesignationId { get; protected set; }
+    public virtual Designation? Designation { get; protected set; }
 
     protected Employee()
     {
@@ -33,12 +46,16 @@ public class Employee : FullAuditedEntity<Guid>
         Guid id,
         string employeeId,
         string fullName,
-        string? department = null)
+        Guid? departmentId = null,
+        Guid? categoryId = null,
+        Guid? designationId = null)
     {
         Id = id;
         EmployeeId = employeeId;
         FullName = fullName;
-        Department = department;
+        DepartmentId = departmentId;
+        CategoryId = categoryId;
+        DesignationId = designationId;
     }
 
     public virtual void SetFullName(string fullName)
@@ -46,8 +63,18 @@ public class Employee : FullAuditedEntity<Guid>
         FullName = fullName;
     }
 
-    public virtual void SetDepartment(string? department)
+    public virtual void SetDepartment(Guid? departmentId)
     {
-        Department = department;
+        DepartmentId = departmentId;
+    }
+
+    public virtual void SetCategory(Guid? categoryId)
+    {
+        CategoryId = categoryId;
+    }
+
+    public virtual void SetDesignation(Guid? designationId)
+    {
+        DesignationId = designationId;
     }
 }

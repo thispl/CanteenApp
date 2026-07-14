@@ -45,4 +45,16 @@ public static class CanteenManagementSystemPermissions
     public const string DeviceCreate = Device + ".Create";
     public const string DeviceEdit = Device + ".Edit";
     public const string DeviceDelete = Device + ".Delete";
+
+    // Meal Transaction permissions
+    public const string MealTransaction = GroupName + ".MealTransaction";
+    public const string MealTransactionCreate = MealTransaction + ".Create";
+    public const string MealTransactionEdit = MealTransaction + ".Edit";
+    public const string MealTransactionDelete = MealTransaction + ".Delete";
+
+    // Cash Deposit permissions
+    public const string CashDeposit = GroupName + ".CashDeposit";
+    public const string CashDepositCreate = CashDeposit + ".Create";
+    public const string CashDepositEdit = CashDeposit + ".Edit";
+    public const string CashDepositDelete = CashDeposit + ".Delete";
 }

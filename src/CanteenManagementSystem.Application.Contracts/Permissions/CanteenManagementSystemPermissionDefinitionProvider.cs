@@ -45,6 +45,16 @@ public class CanteenManagementSystemPermissionDefinitionProvider : PermissionDef
         devicePermission.AddChild(CanteenManagementSystemPermissions.DeviceCreate, L("Permission:DeviceCreate"));
         devicePermission.AddChild(CanteenManagementSystemPermissions.DeviceEdit, L("Permission:DeviceEdit"));
         devicePermission.AddChild(CanteenManagementSystemPermissions.DeviceDelete, L("Permission:DeviceDelete"));
+
+        var mealTransactionPermission = myGroup.AddPermission(CanteenManagementSystemPermissions.MealTransaction, L("Permission:MealTransaction"));
+        mealTransactionPermission.AddChild(CanteenManagementSystemPermissions.MealTransactionCreate, L("Permission:MealTransactionCreate"));
+        mealTransactionPermission.AddChild(CanteenManagementSystemPermissions.MealTransactionEdit, L("Permission:MealTransactionEdit"));
+        mealTransactionPermission.AddChild(CanteenManagementSystemPermissions.MealTransactionDelete, L("Permission:MealTransactionDelete"));
+
+        var cashDepositPermission = myGroup.AddPermission(CanteenManagementSystemPermissions.CashDeposit, L("Permission:CashDeposit"));
+        cashDepositPermission.AddChild(CanteenManagementSystemPermissions.CashDepositCreate, L("Permission:CashDepositCreate"));
+        cashDepositPermission.AddChild(CanteenManagementSystemPermissions.CashDepositEdit, L("Permission:CashDepositEdit"));
+        cashDepositPermission.AddChild(CanteenManagementSystemPermissions.CashDepositDelete, L("Permission:CashDepositDelete"));
     }
 
     private static LocalizableString L(string name)

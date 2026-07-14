@@ -24,11 +24,23 @@ public class EfCoreDepartmentRepository
     {
     }
 
+    public override async Task<Department> GetAsync(Guid id, bool includeDetails = true, CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+        if (includeDetails)
+        {
+            query = query.Include(d => d.Company);
+        }
+        return await query.FirstOrDefaultAsync(d => d.Id == id, cancellationToken)
+            ?? throw new Volo.Abp.Domain.Entities.EntityNotFoundException(typeof(Department), id);
+    }
+
     public virtual async Task<Department?> FindByCCCodeAsync(
         string ccCode,
         CancellationToken cancellationToken = default)
     {
-        return await (await GetDbSetAsync())
+        return await (await GetQueryableAsync())
+            .Include(d => d.Company)
             .FirstOrDefaultAsync(d => d.CCCode == ccCode, cancellationToken);
     }
 
@@ -45,6 +57,8 @@ public class EfCoreDepartmentRepository
         CancellationToken cancellationToken = default)
     {
         var query = await GetQueryableAsync();
+
+        query = query.Include(d => d.Company);
 
         if (!string.IsNullOrWhiteSpace(filter))
         {

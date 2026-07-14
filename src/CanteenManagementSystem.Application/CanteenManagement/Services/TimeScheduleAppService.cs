@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CanteenManagementSystem.CanteenManagement.Dtos;
 using CanteenManagementSystem.CanteenManagement.Entities;
 using CanteenManagementSystem.CanteenManagement.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -20,20 +22,30 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class TimeScheduleAppService : ApplicationService, ITimeScheduleAppService
 {
     private readonly ITimeScheduleRepository _timeScheduleRepository;
+    private readonly IItemRepository _itemRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public TimeScheduleAppService(
         ITimeScheduleRepository timeScheduleRepository,
+        IItemRepository itemRepository,
         IGuidGenerator guidGenerator)
     {
         _timeScheduleRepository = timeScheduleRepository;
+        _itemRepository = itemRepository;
         _guidGenerator = guidGenerator;
     }
 
     public virtual async Task<TimeScheduleDto?> GetAsync(Guid id)
     {
-        var timeSchedule = await _timeScheduleRepository.GetAsync(id);
-        return ObjectMapper.Map<TimeSchedule, TimeScheduleDto>(timeSchedule);
+        var timeSchedule = await _timeScheduleRepository.GetAsync(id, includeDetails: true);
+        return MapWithItemName(timeSchedule);
+    }
+
+    private TimeScheduleDto MapWithItemName(TimeSchedule timeSchedule)
+    {
+        var dto = ObjectMapper.Map<TimeSchedule, TimeScheduleDto>(timeSchedule);
+        dto.ItemName = timeSchedule.Item?.Description;
+        return dto;
     }
 
     public virtual async Task<TimeScheduleDto?> GetByCodeAsync(string code)
@@ -54,16 +66,18 @@ public class TimeScheduleAppService : ApplicationService, ITimeScheduleAppServic
             input.Sorting,
             input.MaxResultCount,
             input.SkipCount,
+            includeDetails: true,
             CancellationToken.None);
 
         return new PagedResultDto<TimeScheduleDto>(
             count,
-            ObjectMapper.Map<List<TimeSchedule>, List<TimeScheduleDto>>(timeSchedules));
+            timeSchedules.Select(MapWithItemName).ToList());
     }
 
     public virtual async Task<TimeScheduleDto> CreateAsync(CreateTimeScheduleDto input)
     {
         ValidateTimeRange(input);
+        await ValidateItemAsync(input.ItemId);
 
         if (!string.IsNullOrWhiteSpace(input.Code) &&
             await _timeScheduleRepository.ExistsByCodeAsync(input.Code))
@@ -76,16 +90,20 @@ public class TimeScheduleAppService : ApplicationService, ITimeScheduleAppServic
             input.Name,
             input.StartTime,
             input.EndTime,
+            input.ItemId,
             input.Code);
 
         await _timeScheduleRepository.InsertAsync(timeSchedule);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<TimeSchedule, TimeScheduleDto>(timeSchedule);
+        var createdTimeSchedule = await _timeScheduleRepository.GetAsync(timeSchedule.Id, includeDetails: true);
+        return MapWithItemName(createdTimeSchedule);
     }
 
     public virtual async Task<TimeScheduleDto> UpdateAsync(Guid id, UpdateTimeScheduleDto input)
     {
         ValidateTimeRange(input);
+        await ValidateItemAsync(input.ItemId);
 
         var timeSchedule = await _timeScheduleRepository.GetAsync(id);
 
@@ -100,10 +118,13 @@ public class TimeScheduleAppService : ApplicationService, ITimeScheduleAppServic
         timeSchedule.SetCode(input.Code);
         timeSchedule.SetStartTime(input.StartTime);
         timeSchedule.SetEndTime(input.EndTime);
+        timeSchedule.SetItem(input.ItemId);
 
         await _timeScheduleRepository.UpdateAsync(timeSchedule);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<TimeSchedule, TimeScheduleDto>(timeSchedule);
+        var updatedTimeSchedule = await _timeScheduleRepository.GetAsync(timeSchedule.Id, includeDetails: true);
+        return MapWithItemName(updatedTimeSchedule);
     }
 
     public virtual async Task DeleteAsync(Guid id)
@@ -114,6 +135,20 @@ public class TimeScheduleAppService : ApplicationService, ITimeScheduleAppServic
     public virtual async Task<bool> ExistsByCodeAsync(string code)
     {
         return await _timeScheduleRepository.ExistsByCodeAsync(code);
+    }
+
+    private async Task ValidateItemAsync(Guid? itemId)
+    {
+        if (!itemId.HasValue || itemId.Value == Guid.Empty)
+        {
+            throw new UserFriendlyException("Item is required.");
+        }
+
+        var queryable = await _itemRepository.GetQueryableAsync();
+        if (!await queryable.AnyAsync(i => i.Id == itemId.Value))
+        {
+            throw new UserFriendlyException("Selected item does not exist.");
+        }
     }
 
     private void ValidateTimeRange(CreateTimeScheduleDto input)

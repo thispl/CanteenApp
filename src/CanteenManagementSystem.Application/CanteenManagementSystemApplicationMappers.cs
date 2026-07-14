@@ -67,3 +67,17 @@ public partial class DeviceMappers : MapperBase<Device, DeviceDto>
     public override partial DeviceDto Map(Device source);
     public override partial void Map(Device source, DeviceDto destination);
 }
+
+[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
+public partial class MealTransactionMappers : MapperBase<MealTransaction, MealTransactionDto>
+{
+    public override partial MealTransactionDto Map(MealTransaction source);
+    public override partial void Map(MealTransaction source, MealTransactionDto destination);
+}
+
+[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
+public partial class CashDepositMappers : MapperBase<CashDeposit, CashDepositDto>
+{
+    public override partial CashDepositDto Map(CashDeposit source);
+    public override partial void Map(CashDeposit source, CashDepositDto destination);
+}

@@ -25,11 +25,28 @@ public class EfCoreEmployeeRepository
     {
     }
 
+    public override async Task<Employee> GetAsync(Guid id, bool includeDetails = true, CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+        if (includeDetails)
+        {
+            query = query
+                .Include(e => e.Department)
+                .Include(e => e.Category)
+                .Include(e => e.Designation);
+        }
+        return await query.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            ?? throw new Volo.Abp.Domain.Entities.EntityNotFoundException(typeof(Employee), id);
+    }
+
     public virtual async Task<Employee?> FindByEmployeeIdAsync(
         string employeeId,
         CancellationToken cancellationToken = default)
     {
-        return await (await GetDbSetAsync())
+        return await (await GetQueryableAsync())
+            .Include(e => e.Department)
+            .Include(e => e.Category)
+            .Include(e => e.Designation)
             .FirstOrDefaultAsync(e => e.EmployeeId == employeeId, cancellationToken);
     }
 
@@ -43,11 +60,21 @@ public class EfCoreEmployeeRepository
 
     public virtual async Task<List<Employee>> GetListAsync(
         string? filter = null,
-        string? department = null,
+        Guid? departmentId = null,
+        Guid? categoryId = null,
+        Guid? designationId = null,
         bool includeDetails = true,
         CancellationToken cancellationToken = default)
     {
         var query = await GetQueryableAsync();
+
+        if (includeDetails)
+        {
+            query = query
+                .Include(e => e.Department)
+                .Include(e => e.Category)
+                .Include(e => e.Designation);
+        }
 
         if (!string.IsNullOrWhiteSpace(filter))
         {
@@ -56,9 +83,19 @@ public class EfCoreEmployeeRepository
                 e.FullName.Contains(filter));
         }
 
-        if (!string.IsNullOrWhiteSpace(department))
+        if (departmentId.HasValue)
         {
-            query = query.Where(e => e.Department == department);
+            query = query.Where(e => e.DepartmentId == departmentId.Value);
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(e => e.CategoryId == categoryId.Value);
+        }
+
+        if (designationId.HasValue)
+        {
+            query = query.Where(e => e.DesignationId == designationId.Value);
         }
 
         return await query
@@ -68,7 +105,9 @@ public class EfCoreEmployeeRepository
 
     public virtual async Task<long> GetCountAsync(
         string? filter = null,
-        string? department = null,
+        Guid? departmentId = null,
+        Guid? categoryId = null,
+        Guid? designationId = null,
         CancellationToken cancellationToken = default)
     {
         var query = await GetQueryableAsync();
@@ -80,9 +119,19 @@ public class EfCoreEmployeeRepository
                 e.FullName.Contains(filter));
         }
 
-        if (!string.IsNullOrWhiteSpace(department))
+        if (departmentId.HasValue)
         {
-            query = query.Where(e => e.Department == department);
+            query = query.Where(e => e.DepartmentId == departmentId.Value);
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(e => e.CategoryId == categoryId.Value);
+        }
+
+        if (designationId.HasValue)
+        {
+            query = query.Where(e => e.DesignationId == designationId.Value);
         }
 
         return await query.LongCountAsync(cancellationToken);

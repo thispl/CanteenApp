@@ -1,0 +1,198 @@
+@page "/canteen/cash-deposits"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["CashDepositMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.DollarSign" Class="me-2" />
+            @L["CashDepositMaster"]
+        </Heading>
+        <Paragraph>@L["CashDepositMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["AddCashDeposit"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center g-2">
+            <Column ColumnSize="ColumnSize.Is4">
+                <select class="form-select" @bind="Filter.EmployeeId">
+                    <option value="">@L["AllEmployees"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <input class="form-control" type="date" @bind="Filter.From" placeholder="@L["From"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <input class="form-control" type="date" @bind="Filter.To" placeholder="@L["To"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is2" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Deposits == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Deposits.Count == 0)
+        {
+            <Paragraph>@L["NoCashDepositsFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["DepositDate"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Employee"]</TableHeaderCell>
+                        <TableHeaderCell>@L["DepositAmount"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Notes"]</TableHeaderCell>
+                        <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var deposit in Deposits)
+                    {
+                        <TableRow>
+                            <TableRowCell>@deposit.DepositDate.ToString("d")</TableRowCell>
+                            <TableRowCell>@deposit.EmployeeName (@deposit.EmployeeIdNumber)</TableRowCell>
+                            <TableRowCell>@deposit.Amount.ToString("C")</TableRowCell>
+                            <TableRowCell>@deposit.Notes</TableRowCell>
+                            <TableRowCell>@deposit.CreationTime.ToString("g")</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(deposit))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteDepositAsync(deposit))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Deposits.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AddCashDeposit"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["Employee"]</FieldLabel>
+                <select class="form-select" @bind="NewDeposit.EmployeeId">
+                    <option value="@Guid.Empty">@L["SelectEmployee"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["DepositAmount"]</FieldLabel>
+                <input class="form-control" type="number" step="0.01" min="0.01"
+                       @bind-value="NewDeposit.Amount"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepositAmountPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DepositDate"]</FieldLabel>
+                <input class="form-control" type="date" @bind="NewDeposit.DepositDate" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Notes"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="NewDeposit.Notes"
+                       @bind-value:event="oninput"
+                       placeholder="@L["NotesPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateDepositAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["EditCashDeposit"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["Employee"]</FieldLabel>
+                <select class="form-select" @bind="EditingDeposit.EmployeeId">
+                    <option value="@Guid.Empty">@L["SelectEmployee"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["DepositAmount"]</FieldLabel>
+                <input class="form-control" type="number" step="0.01" min="0.01"
+                       @bind-value="EditingDeposit.Amount"
+                       @bind-value:event="oninput"
+                       placeholder="@L["DepositAmountPlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["DepositDate"]</FieldLabel>
+                <input class="form-control" type="date" @bind="EditingDeposit.DepositDate" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Notes"]</FieldLabel>
+                <input class="form-control" type="text"
+                       @bind-value="EditingDeposit.Notes"
+                       @bind-value:event="oninput"
+                       placeholder="@L["NotesPlaceholder"]" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateDepositAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

@@ -12,6 +12,8 @@ public class TimeScheduleDto : AuditedEntityDto<Guid>
     public string? Code { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
+    public Guid? ItemId { get; set; }
+    public string? ItemName { get; set; }
 }
 
 /// <summary>
@@ -23,6 +25,7 @@ public class CreateTimeScheduleDto
     public string? Code { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
+    public Guid? ItemId { get; set; }
 }
 
 /// <summary>
@@ -34,6 +37,7 @@ public class UpdateTimeScheduleDto
     public string? Code { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
+    public Guid? ItemId { get; set; }
 }
 
 /// <summary>

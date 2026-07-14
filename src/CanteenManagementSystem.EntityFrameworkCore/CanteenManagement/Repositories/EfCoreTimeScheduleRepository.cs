@@ -44,20 +44,38 @@ public class EfCoreTimeScheduleRepository
             .LongCountAsync(cancellationToken);
     }
 
+    public override async Task<TimeSchedule> GetAsync(Guid id, bool includeDetails = true, CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+        if (includeDetails)
+        {
+            query = query.Include(t => t.Item);
+        }
+        return await query.FirstOrDefaultAsync(t => t.Id == id, cancellationToken)
+            ?? throw new Volo.Abp.Domain.Entities.EntityNotFoundException(typeof(TimeSchedule), id);
+    }
+
     public virtual async Task<List<TimeSchedule>> GetListAsync(
         string? filter = null,
         string? sorting = null,
         int maxResultCount = int.MaxValue,
         int skipCount = 0,
+        bool includeDetails = false,
         CancellationToken cancellationToken = default)
     {
-        var dbSet = await GetDbSetAsync();
-        return await dbSet
+        var query = await GetQueryableAsync();
+        query = query
             .WhereIf(!filter.IsNullOrWhiteSpace(), t =>
                 t.Name.Contains(filter!) ||
                 (t.Code != null && t.Code.Contains(filter!)))
             .OrderBy(sorting.IsNullOrWhiteSpace() ? "StartTime asc" : sorting)
-            .PageBy(skipCount, maxResultCount)
-            .ToListAsync(cancellationToken);
+            .PageBy(skipCount, maxResultCount);
+
+        if (includeDetails)
+        {
+            query = query.Include(t => t.Item);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 }

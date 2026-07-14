@@ -43,5 +43,6 @@ public class CanteenManagementSystemApplicationModule : AbpModule
         // Register and start the background workers
         await context.AddBackgroundWorkerAsync<ZkDatabaseSyncWorker>();
         await context.AddBackgroundWorkerAsync<EmployeeSyncWorker>();
+        await context.AddBackgroundWorkerAsync<MealTransactionSyncWorker>();
     }
 }

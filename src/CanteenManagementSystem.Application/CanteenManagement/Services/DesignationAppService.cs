@@ -20,13 +20,16 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class DesignationAppService : ApplicationService, IDesignationAppService
 {
     private readonly IDesignationRepository _designationRepository;
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public DesignationAppService(
         IDesignationRepository designationRepository,
+        IEmployeeRepository employeeRepository,
         IGuidGenerator guidGenerator)
     {
         _designationRepository = designationRepository;
+        _employeeRepository = employeeRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -102,6 +105,12 @@ public class DesignationAppService : ApplicationService, IDesignationAppService
 
     public virtual async Task DeleteAsync(Guid id)
     {
+        var employeeCount = await _employeeRepository.GetCountAsync(designationId: id);
+        if (employeeCount > 0)
+        {
+            throw new UserFriendlyException("Cannot delete this designation because it is assigned to one or more employees.");
+        }
+
         await _designationRepository.DeleteAsync(id);
     }
 

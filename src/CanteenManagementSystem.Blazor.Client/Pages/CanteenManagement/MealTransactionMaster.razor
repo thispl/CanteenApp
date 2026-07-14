@@ -1,0 +1,214 @@
+@page "/canteen/meal-transactions"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Dtos
+@using CanteenManagementSystem.CanteenManagement.Services
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["MealTransactionMaster"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.Tag" Class="me-2" />
+            @L["MealTransactionMaster"]
+        </Heading>
+        <Paragraph>@L["MealTransactionMasterDescription"]</Paragraph>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6" Class="text-end">
+        <Button Color="Color.Primary" Clicked="OpenCreateModal">
+            <Icon Name="IconName.Plus" Class="me-2" />
+            @L["NewManualPunch"]
+        </Button>
+    </Column>
+</Row>
+
+<Card>
+    <CardHeader>
+        <Row Class="align-items-center g-2">
+            <Column ColumnSize="ColumnSize.Is4">
+                <select class="form-select" @bind="Filter.EmployeeId">
+                    <option value="">@L["AllEmployees"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <input class="form-control" type="date" @bind="Filter.From" placeholder="@L["From"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <input class="form-control" type="date" @bind="Filter.To" placeholder="@L["To"]" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is2" Class="text-end">
+                <Button Color="Color.Secondary" Clicked="RefreshData">
+                    <Icon Name="IconName.Sync" />
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @if (Transactions == null)
+        {
+            <Paragraph>@L["Loading"]</Paragraph>
+        }
+        else if (Transactions.Count == 0)
+        {
+            <Paragraph>@L["NoMealTransactionsFound"]</Paragraph>
+        }
+        else
+        {
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>@L["PunchTime"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Employee"]</TableHeaderCell>
+                        <TableHeaderCell>@L["TimeSchedule"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Item"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Price"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Device"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Source"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Actions"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var transaction in Transactions)
+                    {
+                        <TableRow>
+                            <TableRowCell>@transaction.PunchTime.ToString("g")</TableRowCell>
+                            <TableRowCell>@transaction.EmployeeName (@transaction.EmployeeIdNumber)</TableRowCell>
+                            <TableRowCell>@transaction.TimeScheduleName</TableRowCell>
+                            <TableRowCell>@transaction.ItemDescription</TableRowCell>
+                            <TableRowCell>@transaction.Price.ToString("C")</TableRowCell>
+                            <TableRowCell>@transaction.DeviceName</TableRowCell>
+                            <TableRowCell>@transaction.Source</TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(transaction))">
+                                    <Icon Name="IconName.Edit" />
+                                    @L["Edit"]
+                                </Button>
+                                <Button Color="Color.Danger" Size="Size.Small" Clicked="@(() => DeleteTransactionAsync(transaction))">
+                                    <Icon Name="IconName.Delete" />
+                                    @L["Delete"]
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+
+            @if (TotalCount > Filter.MaxResultCount)
+            {
+                <Pagination>
+                    <PaginationItem Disabled="@IsFirstPage">
+                        <PaginationLink Clicked="GoToPreviousPage">Previous</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem Disabled="@IsLastPage">
+                        <PaginationLink Clicked="GoToNextPage">Next</PaginationLink>
+                    </PaginationItem>
+                </Pagination>
+                <Paragraph>Showing @((Filter.SkipCount + 1)) - @(Math.Min(Filter.SkipCount + Transactions.Count, TotalCount)) of @TotalCount</Paragraph>
+            }
+        }
+    </CardBody>
+</Card>
+
+<Modal @ref="CreateModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["NewManualPunch"]</ModalTitle>
+            <CloseButton Clicked="CloseCreateModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["Employee"]</FieldLabel>
+                <select class="form-select" @bind="NewTransaction.EmployeeId">
+                    <option value="@Guid.Empty">@L["SelectEmployee"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["TimeSchedule"]</FieldLabel>
+                <select class="form-select" @bind="NewTransaction.TimeScheduleId">
+                    <option value="@Guid.Empty">@L["SelectTimeSchedule"]</option>
+                    @foreach (var schedule in TimeSchedules)
+                    {
+                        <option value="@schedule.Id">@schedule.Name (@schedule.StartTime.ToString("hh\\:mm") - @schedule.EndTime.ToString("hh\\:mm"))</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Device"]</FieldLabel>
+                <select class="form-select" @bind="NewTransaction.DeviceId">
+                    <option value="@Guid.Empty">@L["SelectDevice"]</option>
+                    @foreach (var device in Devices)
+                    {
+                        <option value="@device.Id">@device.Name (@device.DeviceId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["PunchTime"]</FieldLabel>
+                <input class="form-control" type="datetime-local" @bind="NewTransaction.PunchTime" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="CreateTransactionAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="EditModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@L["AdjustTransaction"]</ModalTitle>
+            <CloseButton Clicked="CloseEditModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>@L["Employee"]</FieldLabel>
+                <select class="form-select" @bind="EditingTransaction.EmployeeId">
+                    <option value="@Guid.Empty">@L["SelectEmployee"]</option>
+                    @foreach (var employee in Employees)
+                    {
+                        <option value="@employee.Id">@employee.FullName (@employee.EmployeeId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["TimeSchedule"]</FieldLabel>
+                <select class="form-select" @bind="EditingTransaction.TimeScheduleId">
+                    <option value="@Guid.Empty">@L["SelectTimeSchedule"]</option>
+                    @foreach (var schedule in TimeSchedules)
+                    {
+                        <option value="@schedule.Id">@schedule.Name (@schedule.StartTime.ToString("hh\\:mm") - @schedule.EndTime.ToString("hh\\:mm"))</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Device"]</FieldLabel>
+                <select class="form-select" @bind="EditingTransaction.DeviceId">
+                    <option value="@Guid.Empty">@L["SelectDevice"]</option>
+                    @foreach (var device in Devices)
+                    {
+                        <option value="@device.Id">@device.Name (@device.DeviceId)</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["PunchTime"]</FieldLabel>
+                <input class="form-control" type="datetime-local" @bind="EditingTransaction.PunchTime" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="CloseEditModal">@L["Cancel"]</Button>
+            <Button Color="Color.Primary" Clicked="UpdateTransactionAsync">@L["Save"]</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

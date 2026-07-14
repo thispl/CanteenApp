@@ -57,6 +57,8 @@
                         <TableHeaderCell>@L["EmployeeId"]</TableHeaderCell>
                         <TableHeaderCell>@L["FullName"]</TableHeaderCell>
                         <TableHeaderCell>@L["Department"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Category"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Designation"]</TableHeaderCell>
                         <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
                         <TableHeaderCell>@L["Actions"]</TableHeaderCell>
                     </TableRow>
@@ -67,7 +69,9 @@
                         <TableRow>
                             <TableRowCell>@employee.EmployeeId</TableRowCell>
                             <TableRowCell>@employee.FullName</TableRowCell>
-                            <TableRowCell>@(employee.Department ?? "-")</TableRowCell>
+                            <TableRowCell>@(employee.DepartmentName ?? "-")</TableRowCell>
+                            <TableRowCell>@(employee.CategoryName ?? "-")</TableRowCell>
+                            <TableRowCell>@(employee.DesignationName ?? "-")</TableRowCell>
                             <TableRowCell>@employee.CreationTime.ToString("g")</TableRowCell>
                             <TableRowCell>
                                 <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(employee))">
@@ -123,10 +127,36 @@
             </Field>
             <Field>
                 <FieldLabel>@L["Department"]</FieldLabel>
-                <input class="form-control" type="text"
-                       @bind-value="NewEmployee.Department"
-                       @bind-value:event="oninput"
-                       placeholder="@L["DepartmentPlaceholder"]" />
+                <select class="form-select"
+                        @bind="NewEmployee.DepartmentId">
+                    <option value="">@L["SelectDepartment"]</option>
+                    @foreach (var department in Departments)
+                    {
+                        <option value="@department.Id">@department.Name</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Category"]</FieldLabel>
+                <select class="form-select"
+                        @bind="NewEmployee.CategoryId">
+                    <option value="">@L["SelectCategory"]</option>
+                    @foreach (var category in Categories)
+                    {
+                        <option value="@category.Id">@category.CategoryName</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Designation"]</FieldLabel>
+                <select class="form-select"
+                        @bind="NewEmployee.DesignationId">
+                    <option value="">@L["SelectDesignation"]</option>
+                    @foreach (var designation in Designations)
+                    {
+                        <option value="@designation.Id">@designation.Title</option>
+                    }
+                </select>
             </Field>
         </ModalBody>
         <ModalFooter>
@@ -152,10 +182,36 @@
             </Field>
             <Field>
                 <FieldLabel>@L["Department"]</FieldLabel>
-                <input class="form-control" type="text"
-                       @bind-value="EditingEmployee.Department"
-                       @bind-value:event="oninput"
-                       placeholder="@L["DepartmentPlaceholder"]" />
+                <select class="form-select"
+                        @bind="EditingEmployee.DepartmentId">
+                    <option value="">@L["SelectDepartment"]</option>
+                    @foreach (var department in Departments)
+                    {
+                        <option value="@department.Id">@department.Name</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Category"]</FieldLabel>
+                <select class="form-select"
+                        @bind="EditingEmployee.CategoryId">
+                    <option value="">@L["SelectCategory"]</option>
+                    @foreach (var category in Categories)
+                    {
+                        <option value="@category.Id">@category.CategoryName</option>
+                    }
+                </select>
+            </Field>
+            <Field>
+                <FieldLabel>@L["Designation"]</FieldLabel>
+                <select class="form-select"
+                        @bind="EditingEmployee.DesignationId">
+                    <option value="">@L["SelectDesignation"]</option>
+                    @foreach (var designation in Designations)
+                    {
+                        <option value="@designation.Id">@designation.Title</option>
+                    }
+                </select>
             </Field>
         </ModalBody>
         <ModalFooter>

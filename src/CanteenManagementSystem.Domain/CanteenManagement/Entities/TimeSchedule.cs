@@ -28,6 +28,13 @@ public class TimeSchedule : FullAuditedEntity<Guid>
     /// </summary>
     public virtual TimeOnly EndTime { get; protected set; }
 
+    /// <summary>
+    /// Linked canteen item for this schedule
+    /// </summary>
+    public virtual Guid? ItemId { get; protected set; }
+
+    public virtual Item? Item { get; protected set; }
+
     protected TimeSchedule()
     {
         // Required by EF Core
@@ -38,12 +45,14 @@ public class TimeSchedule : FullAuditedEntity<Guid>
         string name,
         TimeOnly startTime,
         TimeOnly endTime,
+        Guid? itemId,
         string? code = null)
     {
         Id = id;
         Name = name;
         StartTime = startTime;
         EndTime = endTime;
+        ItemId = itemId;
         Code = code;
     }
 
@@ -65,5 +74,10 @@ public class TimeSchedule : FullAuditedEntity<Guid>
     public virtual void SetEndTime(TimeOnly endTime)
     {
         EndTime = endTime;
+    }
+
+    public virtual void SetItem(Guid? itemId)
+    {
+        ItemId = itemId;
     }
 }

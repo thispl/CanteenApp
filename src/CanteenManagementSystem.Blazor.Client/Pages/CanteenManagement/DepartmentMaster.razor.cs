@@ -17,9 +17,13 @@ public partial class DepartmentMaster
     protected IDepartmentAppService DepartmentAppService { get; set; } = null!;
 
     [Inject]
+    protected ICompanyAppService CompanyAppService { get; set; } = null!;
+
+    [Inject]
     protected IUiMessageService UiMessageService { get; set; } = null!;
 
     protected IReadOnlyList<DepartmentDto> Departments { get; set; } = new List<DepartmentDto>();
+    protected IReadOnlyList<CompanyDto> Companies { get; set; } = new List<CompanyDto>();
     protected long TotalCount { get; set; }
 
     protected DepartmentListFilterDto Filter { get; set; } = new()
@@ -40,7 +44,21 @@ public partial class DepartmentMaster
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLookupDataAsync();
         await LoadDataAsync();
+    }
+
+    protected async Task LoadLookupDataAsync()
+    {
+        try
+        {
+            var companies = await CompanyAppService.GetListAsync(new CompanyListFilterDto { MaxResultCount = 1000 });
+            Companies = companies.Items;
+        }
+        catch (Exception ex)
+        {
+            await UiMessageService.Error($"Error loading companies: {ex.Message}");
+        }
     }
 
     protected async Task LoadDataAsync()
@@ -113,7 +131,8 @@ public partial class DepartmentMaster
         EditingDepartment = new UpdateDepartmentDto
         {
             Name = department.Name,
-            CCCode = department.CCCode
+            CCCode = department.CCCode,
+            CompanyId = department.CompanyId
         };
         EditModal.Show();
     }

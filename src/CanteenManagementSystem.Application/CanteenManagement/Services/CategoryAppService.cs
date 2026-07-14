@@ -21,13 +21,16 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class CategoryAppService : ApplicationService, ICategoryAppService
 {
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public CategoryAppService(
         ICategoryRepository categoryRepository,
+        IEmployeeRepository employeeRepository,
         IGuidGenerator guidGenerator)
     {
         _categoryRepository = categoryRepository;
+        _employeeRepository = employeeRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -103,6 +106,12 @@ public class CategoryAppService : ApplicationService, ICategoryAppService
 
     public virtual async Task DeleteAsync(Guid id)
     {
+        var employeeCount = await _employeeRepository.GetCountAsync(categoryId: id);
+        if (employeeCount > 0)
+        {
+            throw new UserFriendlyException("Cannot delete this category because it is assigned to one or more employees.");
+        }
+
         await _categoryRepository.DeleteAsync(id);
     }
 

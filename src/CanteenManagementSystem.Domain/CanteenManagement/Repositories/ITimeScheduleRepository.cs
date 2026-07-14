@@ -20,5 +20,6 @@ public interface ITimeScheduleRepository : IRepository<TimeSchedule, Guid>
         string? sorting = null,
         int maxResultCount = int.MaxValue,
         int skipCount = 0,
+        bool includeDetails = false,
         CancellationToken cancellationToken = default);
 }

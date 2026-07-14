@@ -82,6 +82,64 @@ namespace CanteenManagementSystem.Migrations
                     b.ToTable("AppCanteenCheckIns", (string)null);
                 });
 
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.CashDeposit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<DateTime>("DepositDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepositDate");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("AppCashDeposits", (string)null);
+                });
+
             modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -217,6 +275,9 @@ namespace CanteenManagementSystem.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreationTime");
@@ -257,6 +318,8 @@ namespace CanteenManagementSystem.Migrations
                     b.HasIndex("CCCode")
                         .IsUnique()
                         .HasFilter("[CCCode] IS NOT NULL");
+
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("AppDepartments", (string)null);
                 });
@@ -400,6 +463,9 @@ namespace CanteenManagementSystem.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreationTime");
@@ -416,9 +482,11 @@ namespace CanteenManagementSystem.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
 
-                    b.Property<string>("Department")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DesignationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EmployeeId")
                         .IsRequired()
@@ -445,6 +513,12 @@ namespace CanteenManagementSystem.Migrations
                         .HasColumnName("LastModifierId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("DesignationId");
 
                     b.HasIndex("EmployeeId")
                         .IsUnique();
@@ -499,6 +573,83 @@ namespace CanteenManagementSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AppItems", (string)null);
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.MealTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("PunchTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TimeScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("PunchTime");
+
+                    b.HasIndex("Source");
+
+                    b.HasIndex("TimeScheduleId");
+
+                    b.HasIndex("EmployeeId", "PunchTime")
+                        .IsUnique();
+
+                    b.ToTable("AppMealTransactions", (string)null);
                 });
 
             modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.SyncState", b =>
@@ -564,6 +715,9 @@ namespace CanteenManagementSystem.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
 
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastModificationTime");
@@ -585,6 +739,8 @@ namespace CanteenManagementSystem.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasFilter("[Code] IS NOT NULL");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("AppTimeSchedules", (string)null);
                 });
@@ -2549,6 +2705,91 @@ namespace CanteenManagementSystem.Migrations
                     b.HasKey("TenantId", "Name");
 
                     b.ToTable("AbpTenantConnectionStrings", (string)null);
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.CashDeposit", b =>
+                {
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.Department", b =>
+                {
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId");
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.Employee", b =>
+                {
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId");
+
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Designation", "Designation")
+                        .WithMany()
+                        .HasForeignKey("DesignationId");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Designation");
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.MealTransaction", b =>
+                {
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.TimeSchedule", "TimeSchedule")
+                        .WithMany()
+                        .HasForeignKey("TimeScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("TimeSchedule");
+                });
+
+            modelBuilder.Entity("CanteenManagementSystem.CanteenManagement.Entities.TimeSchedule", b =>
+                {
+                    b.HasOne("CanteenManagementSystem.CanteenManagement.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>

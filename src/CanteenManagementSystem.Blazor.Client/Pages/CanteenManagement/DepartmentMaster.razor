@@ -57,6 +57,7 @@
                     <TableRow>
                         <TableHeaderCell>@L["DepartmentName"]</TableHeaderCell>
                         <TableHeaderCell>@L["CCCode"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Company"]</TableHeaderCell>
                         <TableHeaderCell>@L["CreationTime"]</TableHeaderCell>
                         <TableHeaderCell>@L["Actions"]</TableHeaderCell>
                     </TableRow>
@@ -67,6 +68,7 @@
                         <TableRow>
                             <TableRowCell>@department.Name</TableRowCell>
                             <TableRowCell>@(department.CCCode ?? "-")</TableRowCell>
+                            <TableRowCell>@(department.CompanyName ?? "-")</TableRowCell>
                             <TableRowCell>@department.CreationTime.ToString("g")</TableRowCell>
                             <TableRowCell>
                                 <Button Color="Color.Warning" Size="Size.Small" Clicked="@(() => OpenEditModal(department))">
@@ -120,6 +122,17 @@
                        @bind-value:event="oninput"
                        placeholder="@L["CCCodePlaceholder"]" />
             </Field>
+            <Field>
+                <FieldLabel>@L["Company"]</FieldLabel>
+                <select class="form-select"
+                        @bind="NewDepartment.CompanyId">
+                    <option value="">@L["SelectCompany"]</option>
+                    @foreach (var company in Companies)
+                    {
+                        <option value="@company.Id">@company.Name</option>
+                    }
+                </select>
+            </Field>
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="CloseCreateModal">@L["Cancel"]</Button>
@@ -148,6 +161,17 @@
                        @bind-value="EditingDepartment.CCCode"
                        @bind-value:event="oninput"
                        placeholder="@L["CCCodePlaceholder"]" />
+            </Field>
+            <Field>
+                <FieldLabel>@L["Company"]</FieldLabel>
+                <select class="form-select"
+                        @bind="EditingDepartment.CompanyId">
+                    <option value="">@L["SelectCompany"]</option>
+                    @foreach (var company in Companies)
+                    {
+                        <option value="@company.Id">@company.Name</option>
+                    }
+                </select>
             </Field>
         </ModalBody>
         <ModalFooter>

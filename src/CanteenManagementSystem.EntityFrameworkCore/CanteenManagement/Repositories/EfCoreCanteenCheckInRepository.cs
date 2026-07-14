@@ -64,7 +64,7 @@ public class EfCoreCanteenCheckInRepository
                         Id = checkIn.Id,
                         EmployeeId = checkIn.EmployeeId,
                         FullName = employee != null ? employee.FullName : "Unknown",
-                        Department = employee != null ? employee.Department : null,
+                        Department = employee != null ? employee.Department.Name : null,
                         DeviceId = checkIn.DeviceId,
                         CheckInTime = checkIn.CheckInTime
                     };

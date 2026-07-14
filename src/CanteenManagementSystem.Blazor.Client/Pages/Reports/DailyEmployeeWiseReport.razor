@@ -1,0 +1,98 @@
+@page "/reports/daily-employee-wise"
+@attribute [Authorize]
+@using CanteenManagementSystem.CanteenManagement.Reports
+@using Volo.Abp.AspNetCore.Components.Web
+@inherits CanteenManagementSystemComponentBase
+
+<PageTitle>@L["DailyEmployeeWiseReport"] | Canteen Management</PageTitle>
+
+<Row Class="mb-4">
+    <Column ColumnSize="ColumnSize.Is8">
+        <Heading Size="HeadingSize.Is3">
+            <Icon Name="IconName.User" Class="me-2" />
+            @L["DailyEmployeeWiseReport"]
+        </Heading>
+        <Paragraph>@L["DailyEmployeeWiseReportDescription"]</Paragraph>
+    </Column>
+</Row>
+
+<Card Class="mb-3">
+    <CardBody>
+        <Row Class="align-items-end g-2">
+            <Column ColumnSize="ColumnSize.Is3">
+                <label class="form-label">@L["ReportDate"]</label>
+                <input class="form-control" type="date" @bind="Filter.Date" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is2">
+                <Button Color="Color.Primary" Clicked="LoadDataAsync" Disabled="IsLoading">
+                    <Icon Name="IconName.Sync" Class="me-1" />
+                    @L["GenerateReport"]
+                </Button>
+            </Column>
+            @if (Rows.Count > 0)
+            {
+                <Column ColumnSize="ColumnSize.Is2">
+                    <Button Color="Color.Success" Clicked="ExportExcel">
+                        <Icon Name="IconName.ChartBar" Class="me-1" />
+                        @L["ExportExcel"]
+                    </Button>
+                </Column>
+                <Column ColumnSize="ColumnSize.Is2">
+                    <Button Color="Color.Secondary" Clicked="ExportCsv">
+                        <Icon Name="IconName.Star" Class="me-1" />
+                        @L["ExportCsv"]
+                    </Button>
+                </Column>
+            }
+        </Row>
+    </CardBody>
+</Card>
+
+@if (IsLoading)
+{
+    <Paragraph>@L["Loading"]</Paragraph>
+}
+else if (Rows.Count == 0)
+{
+    <Paragraph Class="text-muted">@L["NoDataFound"]</Paragraph>
+}
+else
+{
+    <Card>
+        <CardBody>
+            <Table Striped Hoverable Responsive>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>#</TableHeaderCell>
+                        <TableHeaderCell>@L["EmployeeId"]</TableHeaderCell>
+                        <TableHeaderCell>@L["FullName"]</TableHeaderCell>
+                        <TableHeaderCell>@L["Department"]</TableHeaderCell>
+                        <TableHeaderCell class="text-end">@L["TransactionCount"]</TableHeaderCell>
+                        <TableHeaderCell class="text-end">@L["TotalAmount"]</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @{ int i = 1; }
+                    @foreach (var row in Rows)
+                    {
+                        <TableRow>
+                            <TableRowCell>@i++</TableRowCell>
+                            <TableRowCell>@row.EmployeeIdNumber</TableRowCell>
+                            <TableRowCell>@row.EmployeeName</TableRowCell>
+                            <TableRowCell>@row.Department</TableRowCell>
+                            <TableRowCell class="text-end">@row.TransactionCount</TableRowCell>
+                            <TableRowCell class="text-end">₹@row.TotalAmount.ToString("N2")</TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+                <TableFooter>
+                    <TableRow Class="fw-bold table-light">
+                        <TableRowCell colspan="4">Total</TableRowCell>
+                        <TableRowCell class="text-end">@Rows.Sum(r => r.TransactionCount)</TableRowCell>
+                        <TableRowCell class="text-end">₹@Rows.Sum(r => r.TotalAmount).ToString("N2")</TableRowCell>
+                    </TableRow>
+                </TableFooter>
+            </Table>
+        </CardBody>
+    </Card>
+}

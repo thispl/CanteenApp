@@ -17,9 +17,13 @@ public partial class TimeScheduleMaster
     protected ITimeScheduleAppService TimeScheduleAppService { get; set; } = null!;
 
     [Inject]
+    protected IItemAppService ItemAppService { get; set; } = null!;
+
+    [Inject]
     protected IUiMessageService UiMessageService { get; set; } = null!;
 
     protected IReadOnlyList<TimeScheduleDto> TimeSchedules { get; set; } = new List<TimeScheduleDto>();
+    protected IReadOnlyList<ItemDto> Items { get; set; } = new List<ItemDto>();
     protected long TotalCount { get; set; }
 
     protected TimeScheduleListFilterDto Filter { get; set; } = new()
@@ -41,6 +45,7 @@ public partial class TimeScheduleMaster
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
+        await LoadItemsAsync();
     }
 
     protected async Task LoadDataAsync()
@@ -54,6 +59,19 @@ public partial class TimeScheduleMaster
         catch (Exception ex)
         {
             await UiMessageService.Error($"Error loading time schedules: {ex.Message}");
+        }
+    }
+
+    protected async Task LoadItemsAsync()
+    {
+        try
+        {
+            var result = await ItemAppService.GetListAsync(new ItemListFilterDto { MaxResultCount = 1000 });
+            Items = result.Items;
+        }
+        catch (Exception ex)
+        {
+            await UiMessageService.Error($"Error loading items: {ex.Message}");
         }
     }
 
@@ -119,7 +137,8 @@ public partial class TimeScheduleMaster
             Name = timeSchedule.Name,
             Code = timeSchedule.Code,
             StartTime = timeSchedule.StartTime,
-            EndTime = timeSchedule.EndTime
+            EndTime = timeSchedule.EndTime,
+            ItemId = timeSchedule.ItemId
         };
         EditModal.Show();
     }
@@ -134,6 +153,12 @@ public partial class TimeScheduleMaster
         if (string.IsNullOrWhiteSpace(NewTimeSchedule.Name))
         {
             await UiMessageService.Error("Name is required");
+            return;
+        }
+
+        if (NewTimeSchedule.ItemId == Guid.Empty)
+        {
+            await UiMessageService.Error("Item is required");
             return;
         }
 
@@ -155,6 +180,12 @@ public partial class TimeScheduleMaster
         if (string.IsNullOrWhiteSpace(EditingTimeSchedule.Name))
         {
             await UiMessageService.Error("Name is required");
+            return;
+        }
+
+        if (EditingTimeSchedule.ItemId == Guid.Empty)
+        {
+            await UiMessageService.Error("Item is required");
             return;
         }
 

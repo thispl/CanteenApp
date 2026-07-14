@@ -7,6 +7,7 @@ using CanteenManagementSystem.CanteenManagement.Dtos;
 using CanteenManagementSystem.CanteenManagement.Entities;
 using CanteenManagementSystem.CanteenManagement.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -21,20 +22,26 @@ namespace CanteenManagementSystem.CanteenManagement.Services;
 public class DepartmentAppService : ApplicationService, IDepartmentAppService
 {
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly ICompanyRepository _companyRepository;
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public DepartmentAppService(
         IDepartmentRepository departmentRepository,
+        ICompanyRepository companyRepository,
+        IEmployeeRepository employeeRepository,
         IGuidGenerator guidGenerator)
     {
         _departmentRepository = departmentRepository;
+        _companyRepository = companyRepository;
+        _employeeRepository = employeeRepository;
         _guidGenerator = guidGenerator;
     }
 
     public virtual async Task<DepartmentDto?> GetAsync(Guid id)
     {
         var department = await _departmentRepository.GetAsync(id);
-        return ObjectMapper.Map<Department, DepartmentDto>(department);
+        return MapWithCompanyName(department);
     }
 
     public virtual async Task<DepartmentDto?> GetByCCCodeAsync(string ccCode)
@@ -44,7 +51,7 @@ public class DepartmentAppService : ApplicationService, IDepartmentAppService
         {
             return null;
         }
-        return ObjectMapper.Map<Department, DepartmentDto>(department);
+        return MapWithCompanyName(department);
     }
 
     public virtual async Task<PagedResultDto<DepartmentDto>> GetListAsync(DepartmentListFilterDto input)
@@ -61,7 +68,7 @@ public class DepartmentAppService : ApplicationService, IDepartmentAppService
 
         return new PagedResultDto<DepartmentDto>(
             count,
-            ObjectMapper.Map<List<Department>, List<DepartmentDto>>(pagedDepartments));
+            pagedDepartments.Select(MapWithCompanyName).ToList());
     }
 
     public virtual async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
@@ -72,14 +79,19 @@ public class DepartmentAppService : ApplicationService, IDepartmentAppService
             throw new UserFriendlyException($"Department with cost-center code '{input.CCCode}' already exists.");
         }
 
+        await ValidateCompanyAsync(input.CompanyId);
+
         var department = new Department(
             _guidGenerator.Create(),
             input.Name,
-            input.CCCode);
+            input.CCCode,
+            input.CompanyId);
 
         await _departmentRepository.InsertAsync(department);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<Department, DepartmentDto>(department);
+        var createdDepartment = await _departmentRepository.GetAsync(department.Id);
+        return MapWithCompanyName(createdDepartment);
     }
 
     public virtual async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
@@ -93,21 +105,47 @@ public class DepartmentAppService : ApplicationService, IDepartmentAppService
             throw new UserFriendlyException($"Department with cost-center code '{input.CCCode}' already exists.");
         }
 
+        await ValidateCompanyAsync(input.CompanyId);
+
         department.SetName(input.Name);
         department.SetCCCode(input.CCCode);
+        department.SetCompany(input.CompanyId);
 
         await _departmentRepository.UpdateAsync(department);
+        await UnitOfWorkManager.Current.SaveChangesAsync();
 
-        return ObjectMapper.Map<Department, DepartmentDto>(department);
+        var updatedDepartment = await _departmentRepository.GetAsync(department.Id);
+        return MapWithCompanyName(updatedDepartment);
     }
 
     public virtual async Task DeleteAsync(Guid id)
     {
+        var employeeCount = await _employeeRepository.GetCountAsync(departmentId: id);
+        if (employeeCount > 0)
+        {
+            throw new UserFriendlyException("Cannot delete this department because it is assigned to one or more employees.");
+        }
+
         await _departmentRepository.DeleteAsync(id);
     }
 
     public virtual async Task<bool> ExistsByCCCodeAsync(string ccCode)
     {
         return await _departmentRepository.ExistsByCCCodeAsync(ccCode);
+    }
+
+    private async Task ValidateCompanyAsync(Guid? companyId)
+    {
+        if (companyId.HasValue && !await (await _companyRepository.GetQueryableAsync()).AnyAsync(c => c.Id == companyId.Value))
+        {
+            throw new UserFriendlyException($"Company with ID '{companyId.Value}' does not exist.");
+        }
+    }
+
+    private DepartmentDto MapWithCompanyName(Department department)
+    {
+        var dto = ObjectMapper.Map<Department, DepartmentDto>(department);
+        dto.CompanyName = department.Company?.Name;
+        return dto;
     }
 }
