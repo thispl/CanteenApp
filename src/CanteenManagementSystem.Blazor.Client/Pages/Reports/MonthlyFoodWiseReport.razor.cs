@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CanteenManagementSystem.CanteenManagement.Reports;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.JSInterop;
 using Volo.Abp.AspNetCore.Components.Messages;
 
@@ -14,6 +15,7 @@ public partial class MonthlyFoodWiseReport
     [Inject] protected IReportAppService ReportAppService { get; set; } = null!;
     [Inject] protected IUiMessageService UiMessageService { get; set; } = null!;
     [Inject] protected IJSRuntime JS { get; set; } = null!;
+    [Inject] protected IAccessTokenProvider TokenProvider { get; set; } = null!;
 
     protected MonthlyReportFilterDto Filter { get; set; } = new();
     protected List<FoodWiseReportRowDto> Rows { get; set; } = new();
@@ -41,25 +43,19 @@ public partial class MonthlyFoodWiseReport
 
     protected async Task ExportExcel()
     {
-        var url = $"/api/app/reports/excel/monthly-food-wise?from={Filter.From:yyyy-MM-dd}&to={Filter.To:yyyy-MM-dd}";
-        await JS.InvokeVoidAsync("open", url, "_blank");
+        await ReportExportHelper.DownloadExcelAsync(JS, TokenProvider,
+            "monthly-food-wise",
+            $"from={Filter.From:yyyy-MM-dd}&to={Filter.To:yyyy-MM-dd}",
+            $"monthly-food-wise-{Filter.From:yyyyMM}.xlsx");
     }
 
-    protected void ExportCsv()
+    protected async Task ExportCsv()
     {
-        var lines = new System.Text.StringBuilder();
-        lines.AppendLine("Item,Unit Price,Count,Total Amount");
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Item,Unit Price,Count,Total Amount");
         foreach (var r in Rows)
-            lines.AppendLine($"\"{r.ItemDescription}\",{r.UnitPrice},{r.TransactionCount},{r.TotalAmount}");
-        lines.AppendLine($"TOTAL,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
-        DownloadCsv(lines.ToString(), $"monthly-food-wise-{Filter.From:yyyyMM}.csv");
-    }
-
-    private async void DownloadCsv(string content, string filename)
-    {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var base64 = Convert.ToBase64String(bytes);
-        await JS.InvokeVoidAsync("eval",
-            $"var a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='{filename}';a.click();");
+            sb.AppendLine($"\"{r.ItemDescription}\",{r.UnitPrice},{r.TransactionCount},{r.TotalAmount}");
+        sb.AppendLine($"TOTAL,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
+        await ReportExportHelper.DownloadCsvAsync(JS, sb.ToString(), $"monthly-food-wise-{Filter.From:yyyyMM}.csv");
     }
 }

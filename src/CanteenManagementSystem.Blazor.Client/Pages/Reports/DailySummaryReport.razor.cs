@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CanteenManagementSystem.CanteenManagement.Reports;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.JSInterop;
 using Volo.Abp.AspNetCore.Components.Messages;
 
@@ -14,6 +15,7 @@ public partial class DailySummaryReport
     [Inject] protected IReportAppService ReportAppService { get; set; } = null!;
     [Inject] protected IUiMessageService UiMessageService { get; set; } = null!;
     [Inject] protected IJSRuntime JS { get; set; } = null!;
+    [Inject] protected IAccessTokenProvider TokenProvider { get; set; } = null!;
 
     protected DailyReportFilterDto Filter { get; set; } = new();
     protected List<DailySummaryReportRowDto> Rows { get; set; } = new();
@@ -41,25 +43,19 @@ public partial class DailySummaryReport
 
     protected async Task ExportExcel()
     {
-        var url = $"/api/app/reports/excel/daily-summary?date={Filter.Date:yyyy-MM-dd}";
-        await JS.InvokeVoidAsync("open", url, "_blank");
+        await ReportExportHelper.DownloadExcelAsync(JS, TokenProvider,
+            "daily-summary",
+            $"date={Filter.Date:yyyy-MM-dd}",
+            $"daily-summary-{Filter.Date:yyyyMMdd}.xlsx");
     }
 
-    protected void ExportCsv()
+    protected async Task ExportCsv()
     {
-        var lines = new System.Text.StringBuilder();
-        lines.AppendLine("Time Schedule,Slot,Count,Total Amount");
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Time Schedule,Slot,Count,Total Amount");
         foreach (var r in Rows)
-            lines.AppendLine($"\"{r.TimeScheduleName}\",\"{r.TimeSlot}\",{r.TransactionCount},{r.TotalAmount}");
-        lines.AppendLine($"TOTAL,,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
-        DownloadCsv(lines.ToString(), $"daily-summary-{Filter.Date:yyyyMMdd}.csv");
-    }
-
-    private async void DownloadCsv(string content, string filename)
-    {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var base64 = Convert.ToBase64String(bytes);
-        await JS.InvokeVoidAsync("eval",
-            $"var a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='{filename}';a.click();");
+            sb.AppendLine($"\"{r.TimeScheduleName}\",\"{r.TimeSlot}\",{r.TransactionCount},{r.TotalAmount}");
+        sb.AppendLine($"TOTAL,,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
+        await ReportExportHelper.DownloadCsvAsync(JS, sb.ToString(), $"daily-summary-{Filter.Date:yyyyMMdd}.csv");
     }
 }

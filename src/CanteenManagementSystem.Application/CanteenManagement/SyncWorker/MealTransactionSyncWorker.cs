@@ -31,6 +31,7 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
         base(timer, serviceScopeFactory)
     {
         Timer.Period = SyncIntervalMilliseconds;
+        Timer.RunOnStart = true;
     }
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
@@ -70,6 +71,16 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
             logger.LogInformation("Found {Count} new punches to process for meal transactions.", newTransactions.Count);
 
             var timeSchedules = await timeScheduleRepository.GetListAsync(includeDetails: true, cancellationToken: cancellationToken);
+            foreach (var schedule in timeSchedules)
+            {
+                logger.LogInformation(
+                    "Time schedule {ScheduleName}: {StartTime}-{EndTime}, ItemId: {ItemId}",
+                    schedule.Name, schedule.StartTime, schedule.EndTime, schedule.ItemId);
+                if (!schedule.ItemId.HasValue)
+                {
+                    logger.LogWarning("Time schedule {ScheduleName} is not linked to an item.", schedule.Name);
+                }
+            }
             var schedulesWithItems = timeSchedules.Where(t => t.ItemId.HasValue).ToList();
 
             int maxProcessedId = lastProcessedId;
@@ -85,22 +96,24 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
                     if (string.IsNullOrEmpty(transaction.Pin))
                     {
                         logger.LogWarning("Skipping meal transaction sync for punch {PunchId} - Pin (emp_code) is null", transaction.Id);
+                        maxProcessedId = transaction.Id;
                         continue;
                     }
 
                     if (!transaction.AuthTime.HasValue)
                     {
                         logger.LogWarning("Skipping meal transaction sync for punch {PunchId} - Punch time is null", transaction.Id);
+                        maxProcessedId = transaction.Id;
                         continue;
                     }
 
                     var employee = await employeeRepository.FindByEmployeeIdAsync(transaction.Pin, cancellationToken);
                     if (employee == null)
                     {
-                        logger.LogWarning("No local employee found for punch {PunchId} with Pin {Pin}. Creating placeholder employee.", transaction.Id, transaction.Pin);
-                        employee = new Employee(guidGenerator.Create(), transaction.Pin, $"Unknown ({transaction.Pin})");
-                        await employeeRepository.InsertAsync(employee, autoSave: true, cancellationToken);
+                        logger.LogWarning("Skipping punch {PunchId}: no active local employee matches Pin {Pin}.", transaction.Id, transaction.Pin);
                         noEmployeeCount++;
+                        maxProcessedId = transaction.Id;
+                        continue;
                     }
 
                     var punchTime = transaction.AuthTime.Value;
@@ -108,6 +121,7 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
                     if (timeSchedule == null)
                     {
                         noScheduleCount++;
+                        maxProcessedId = transaction.Id;
                         continue;
                     }
 
@@ -153,7 +167,8 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error processing meal transaction for punch ID {PunchId}", transaction.Id);
+                    logger.LogError(ex, "Error processing meal transaction for punch ID {PunchId}; remaining punches will be retried next cycle.", transaction.Id);
+                    break;
                 }
             }
 
@@ -225,8 +240,7 @@ public class MealTransactionSyncWorker : AsyncPeriodicBackgroundWorkerBase
         CancellationToken cancellationToken)
     {
         var deviceId = authDeviceId ?? "Unknown";
-        var queryable = await deviceRepository.GetQueryableAsync();
-        var device = await queryable.FirstOrDefaultAsync(d => d.DeviceId == deviceId, cancellationToken);
+        var device = await deviceRepository.FindByDeviceIdAsync(deviceId, cancellationToken);
 
         if (device != null)
         {

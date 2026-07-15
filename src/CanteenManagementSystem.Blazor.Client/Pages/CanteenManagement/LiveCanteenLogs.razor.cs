@@ -9,7 +9,7 @@ using Volo.Abp.AspNetCore.Components.Messages;
 
 namespace CanteenManagementSystem.Blazor.Client.Pages.CanteenManagement;
 
-public partial class LiveCanteenLogs
+public partial class LiveCanteenLogs : IDisposable
 {
     [Inject]
     protected ICanteenCheckInAppService CheckInAppService { get; set; } = null!;

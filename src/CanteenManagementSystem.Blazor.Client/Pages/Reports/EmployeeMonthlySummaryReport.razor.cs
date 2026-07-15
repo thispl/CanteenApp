@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CanteenManagementSystem.CanteenManagement.Reports;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.JSInterop;
 using Volo.Abp.AspNetCore.Components.Messages;
 
@@ -14,6 +15,7 @@ public partial class EmployeeMonthlySummaryReport
     [Inject] protected IReportAppService ReportAppService { get; set; } = null!;
     [Inject] protected IUiMessageService UiMessageService { get; set; } = null!;
     [Inject] protected IJSRuntime JS { get; set; } = null!;
+    [Inject] protected IAccessTokenProvider TokenProvider { get; set; } = null!;
 
     protected MonthlyReportFilterDto Filter { get; set; } = new();
     protected List<EmployeeMonthlyDetailRowDto> Rows { get; set; } = new();
@@ -41,25 +43,19 @@ public partial class EmployeeMonthlySummaryReport
 
     protected async Task ExportExcel()
     {
-        var url = $"/api/app/reports/excel/employee-monthly-summary?from={Filter.From:yyyy-MM-dd}&to={Filter.To:yyyy-MM-dd}";
-        await JS.InvokeVoidAsync("open", url, "_blank");
+        await ReportExportHelper.DownloadExcelAsync(JS, TokenProvider,
+            "employee-monthly-summary",
+            $"from={Filter.From:yyyy-MM-dd}&to={Filter.To:yyyy-MM-dd}",
+            $"employee-monthly-summary-{Filter.From:yyyyMM}.xlsx");
     }
 
-    protected void ExportCsv()
+    protected async Task ExportCsv()
     {
-        var lines = new System.Text.StringBuilder();
-        lines.AppendLine("Employee ID,Name,Department,Time Schedule,Count,Total Amount");
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Employee ID,Name,Department,Time Schedule,Count,Total Amount");
         foreach (var r in Rows)
-            lines.AppendLine($"\"{r.EmployeeIdNumber}\",\"{r.EmployeeName}\",\"{r.Department}\",\"{r.TimeScheduleName}\",{r.TransactionCount},{r.TotalAmount}");
-        lines.AppendLine($"TOTAL,,,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
-        DownloadCsv(lines.ToString(), $"employee-monthly-summary-{Filter.From:yyyyMM}.csv");
-    }
-
-    private async void DownloadCsv(string content, string filename)
-    {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var base64 = Convert.ToBase64String(bytes);
-        await JS.InvokeVoidAsync("eval",
-            $"var a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='{filename}';a.click();");
+            sb.AppendLine($"\"{r.EmployeeIdNumber}\",\"{r.EmployeeName}\",\"{r.Department}\",\"{r.TimeScheduleName}\",{r.TransactionCount},{r.TotalAmount}");
+        sb.AppendLine($"TOTAL,,,,{Rows.Sum(r => r.TransactionCount)},{Rows.Sum(r => r.TotalAmount)}");
+        await ReportExportHelper.DownloadCsvAsync(JS, sb.ToString(), $"employee-monthly-summary-{Filter.From:yyyyMM}.csv");
     }
 }
